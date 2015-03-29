@@ -1,0 +1,24 @@
+<p><a href="https://www.bearfruit.org/2008/04/17/telnet-for-testing-ssl-https-websites/">Reference</a></p>
+
+<ol>
+<li><p>Http server check</p>
+
+<pre><code>telnet www.somesite 80
+GET /index.html HTTP/1.1
+Host: www.somesite
+</code></pre></li>
+</ol>
+
+<p>(Note you need to press enter twice at the end)</p>
+
+<ol>
+<li><p>Https server check</p>
+
+<pre><code>openssl s_client -connect www.somesite:443
+[watch the ssl certificate details scroll by]
+GET /index.html HTTP/1.1
+Host: www.somesite
+</code></pre>
+
+<p>(again you need to press enter twice)</p></li>
+</ol>
