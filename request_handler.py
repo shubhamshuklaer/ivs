@@ -8,7 +8,9 @@ import urlparse
 
 class request_handler(BaseHTTPRequestHandler):
     def do_POST(self):
-        body=self.rfile.read()
+        length = int(self.headers.getheader('content-length'))
+        body=self.rfile.read(length)
+        print("Hello")
         param=urlparse.parse_qs(body)
         action=param["action"][0]
         print(param["action"][0]=="pull")
