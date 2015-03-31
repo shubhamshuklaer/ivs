@@ -1,6 +1,7 @@
 from BaseHTTPServer import BaseHTTPRequestHandler
 import CGIHTTPServer
 import urlparse
+import server_settings
 #The CGIHTTPServer module defines a request-handler class, 
 #interface compatible with BaseHTTPServer.BaseHTTPRequestHandler 
 #and inherits behavior from SimpleHTTPServer.SimpleHTTPRequestHandler 
@@ -22,6 +23,7 @@ class request_handler(BaseHTTPRequestHandler):
             elif action== "pull":
                 print("pull")
                 self.wfile.write("pull")
+            self.wfile.write(server_settings.service_dir)
             res_code=200
         else:
             res_code=403
