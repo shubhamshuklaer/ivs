@@ -1,0 +1,17 @@
+local - MySQLdb.connect(localhost, "user", "pass", "dat")
+
+working on local
+
+cloud sql instance
+
+* create project
+* dashboard -> storage -> cloud sql
+* create instance
+
+Compute -> Compute engine -> VM instance
+
+get static IP
+
+copy IP and authorize it in SQL instance, we'll connect to DB from 	
+
+update & install mysql-common on VM.
