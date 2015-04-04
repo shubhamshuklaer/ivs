@@ -85,7 +85,8 @@ class ivs:
 								"path": os.path.relpath(os.path.join(root, f), self.path), 
 								"staged": True, 
 								"staged_ts": os.path.getmtime(os.path.join(root, f)),
-								"patch_ids": []
+								"patch_ids": [],
+								"is_present": True
 							}
 						)
 					else:
@@ -108,7 +109,8 @@ class ivs:
 						"path": path, 
 						"staged": True, 
 						"staged_ts": os.path.getmtime(os.path.join(self.path, path)),
-						"patch_ids": []
+						"patch_ids": [],
+						"is_present": True
 					}
 				)
 			else:
@@ -136,6 +138,7 @@ class ivs:
 
 			if(len(patches) > 0):
 				commit_id = self.commits.insert({
+					"uid":  ObjectId(),
 					"patch_ids": [],
 					"ts": time.time(),
 					"msg": msg
@@ -143,17 +146,8 @@ class ivs:
 				)
 				# print patches[0].patchs
 				for patch in patches:
-					#patch_id = self.patches.insert({
-							#"obj": {
-								#"diffs": patch.diffs,
-							    #"start1": patch.start1,
-							    #"start2": patch.start2,
-							    #"length1": patch.length1,
-							    #"length2": patch.length2
-							#}
-						#}
-					#)
-                                        patch_id = self.patches.insert(patch.patch_dict)
+
+					patch_id = self.patches.insert(patch.patch_dict)
 
 					self.files.update({
 							"staged": True,
@@ -179,6 +173,9 @@ class ivs:
 							}
 						}
 					)
+	def rollback(self, commit_id):
+		print "Rolling back to : " + str(commit_id)
+
 
 	def log(self):
 		commits = self.commits.find( { '$query': {}, '$orderby': { "ts" : -1 } } )
@@ -203,30 +200,24 @@ class ivs:
 				# print patch_id
 
 				for mongo_patch in self.patches.find({"_id": patch_id}):
-					#patch_obj = {
-						#"diffs": patch["obj"]["diffs"],
-						#"start1": patch["obj"]["start1"],
-						#"start2": patch["obj"]["start2"],
-						#"length1": patch["obj"]["length1"],
-						#"length2": patch["obj"]["length2"]
-					#}
-                                        patch_dict=dict()
-                                        print(mongo_patch)
-                                        patch_dict["diffs"]=mongo_patch["diffs"]
-                                        patch_dict["start1"]=int(mongo_patch["start1"])
-                                        patch_dict["start2"]=int(mongo_patch["start2"])
-                                        patch_dict["length1"]=int(mongo_patch["length1"])
-                                        patch_dict["length2"]=int(mongo_patch["length2"])
 
-                                        patch_obj=dmp_module.patch_obj()
-                                        patch_obj.fill_dict(patch_dict)
-					patch_obj_arr.append(patch_obj)	
+					patch_dict=dict()
+					print(mongo_patch)
+					patch_dict["diffs"]=mongo_patch["diffs"]
+					patch_dict["start1"]=int(mongo_patch["start1"])
+					patch_dict["start2"]=int(mongo_patch["start2"])
+					patch_dict["length1"]=int(mongo_patch["length1"])
+					patch_dict["length2"]=int(mongo_patch["length2"])
+
+					patch_obj=dmp_module.patch_obj()
+					patch_obj.fill_dict(patch_dict)
+					patch_obj_arr.append(patch_obj)			
 
 				tmp_txt = self.dmp.patch_apply(patch_obj_arr, "")[0]
 		with open (os.path.join(self.path, entry["path"]), "r") as myfile:
 			data=myfile.read()
-		print "data: " + data
-		print "text: " + tmp_txt
+		# print "data: " + data
+		# print "text: " + tmp_txt
 		# print type(data) 
 		return (tmp_txt, data)
 
@@ -234,16 +225,26 @@ class ivs:
 		print "untracked: \t"
 		for root, dirs, files in os.walk(self.path):
 			for f in files:
-				entry = self.files.find({
+				entry = self.files.find_one({
 					"path": os.path.relpath(os.path.join(root, f), self.path)
 				})
-				# if(entry.count() == 0):
-				# 	print "\t" + os.path.relpath(os.path.join(root, f), self.path)
+				if(entry.count() == 0):
+					print "\t" + os.path.relpath(os.path.join(root, f), self.path)
 
 		entries = self.files.find()
 		for entry in entries:
 			if not os.path.exists(os.path.join(self.path, entry["path"])):
 				print "deleted: \t" + entry["path"]
+				self.files.update({
+						"path": entry["path"]
+					},
+					{ 
+						'$set': {
+							"is_present": False, 
+							"staged": False
+						} 
+					} 
+				)
 			elif self.is_diff(entry):
 				print "unstaged: \t" + entry["path"]
 			else:
@@ -269,12 +270,12 @@ if __name__ == "__main__":
 
 	repo = ivs()
 
-        repo.set_path("/home/shubham/Documents/theory")
+        repo.set_path("/home/kunal15595/Documents/theory")
         repo.set_dbname("test_database")
 
         repo.init()
 
-        repo.add("patch_test/a.txt")
+        repo.add("networks/tanenbaum/a.txt")
 
 
         repo.status()
@@ -284,4 +285,4 @@ if __name__ == "__main__":
         repo.show(repo.commits, "commits")
         repo.show(repo.staged, "staged")
 
-        #repo.delete()
+        # repo.delete()
