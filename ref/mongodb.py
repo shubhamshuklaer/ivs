@@ -6,6 +6,11 @@ import os
 import shutil
 import sys
 import time
+import unittest
+import diff_match_patch as dmp_module
+import datetime
+import bson
+import json
 
 class ivs:
 	def __init__(self):
@@ -42,7 +47,6 @@ class ivs:
 			}
 		)
 		
-
 	def load_params(self, dbname):
 		self.set_conn(Connection())
 		self.set_db(self.conn[dbname])
@@ -51,13 +55,14 @@ class ivs:
 		self.commits = self.db.commits
 		self.staged = self.db.staged
 		self.params = self.db.params
+		self.patches = self.db.patches
 
 
 	def init(self):
-
 		if not os.path.exists(os.path.join(self.path, '.ivs')):
 			os.makedirs(os.path.join(self.path, '.ivs'))
 		else:
+			print "Loading parameters ..."
 			self.load_params('test_database')
 
 		for root, dirs, files in os.walk(os.path.join(self.path, '.ivs')):
@@ -65,6 +70,9 @@ class ivs:
 				os.unlink(os.path.join(root, f))
 			for d in dirs:
 				shutil.rmtree(os.path.join(root, d))
+
+		self.dmp = dmp_module.diff_match_patch()
+		self.patch_obj = dmp_module.patch_obj()
 
 	def add(self, path):
 		if path == "-a":
@@ -75,7 +83,9 @@ class ivs:
 						self.files.insert({
 								"name": f, 
 								"path": os.path.relpath(os.path.join(root, f), self.path), 
-								"staged": True, "staged_ts": os.path.getmtime(os.path.join(root, f))
+								"staged": True, 
+								"staged_ts": os.path.getmtime(os.path.join(root, f)),
+								"patch_ids": []
 							}
 						)
 					else:
@@ -90,28 +100,135 @@ class ivs:
 							}
 						)
 		else:
-			entry = self.files.find({"path": path})
-			if(entry.count() == 0):
+			entry = self.files.find_one({"path": path})
+			if(entry == None or len(entry) == 0):
 				print "add insert"
 				self.files.insert({
 						"name": os.path.basename(path), 
 						"path": path, 
 						"staged": True, 
-						"staged_ts": os.path.getmtime(os.path.join(self.path, path))
+						"staged_ts": os.path.getmtime(os.path.join(self.path, path)),
+						"patch_ids": []
 					}
 				)
 			else:
-				print "add update"
-				self.files.update({
-						"path": path
-					},
-					{ 
-						'$set': {
-							"staged": True, 
-							"staged_ts": os.path.getmtime(os.path.join(self.path, path))
+				if self.is_diff(entry):
+					print "add update"
+					self.files.update({
+							"path": path
+						},
+						{ 
+							'$set': {
+								"staged": True, 
+								"staged_ts": time.time()
+							} 
 						} 
-					} 
+					)
+
+	def commit(self, msg):
+		print "committing"
+		entries = self.files.find({"staged": True})
+		for entry in entries:
+			(tmp_txt, data) = self.get_diff(entry)
+
+			# print type(tmp_txt) 
+			patches = self.dmp.patch_make(tmp_txt, data.decode('utf-8'))
+
+			if(len(patches) > 0):
+				commit_id = self.commits.insert({
+					"patch_ids": [],
+					"ts": time.time(),
+					"msg": msg
+					}
 				)
+				# print patches[0].patchs
+				for patch in patches:
+					#patch_id = self.patches.insert({
+							#"obj": {
+								#"diffs": patch.diffs,
+							    #"start1": patch.start1,
+							    #"start2": patch.start2,
+							    #"length1": patch.length1,
+							    #"length2": patch.length2
+							#}
+						#}
+					#)
+                                        patch_id = self.patches.insert(patch.patch_dict)
+
+					self.files.update({
+							"staged": True,
+							"path": entry["path"]
+						},
+						{ 
+							'$set': {
+								"staged": False, 
+								"staged_ts": time.time()
+							},
+							'$addToSet': {
+								"patch_ids": patch_id
+							}
+						} 
+					)
+
+					self.commits.update({
+						"_id": commit_id
+						},
+						{
+							'$addToSet': {
+								"patch_ids": patch_id
+							}
+						}
+					)
+
+	def log(self):
+		commits = self.commits.find( { '$query': {}, '$orderby': { "ts" : -1 } } )
+		for commit in commits:
+			print "Commit \t: " + str(commit["_id"])
+			print "Message\t: " + str(commit["msg"])
+			print "" + datetime.datetime.fromtimestamp(commit["ts"]).strftime('%Y-%m-%d %H:%M:%S')
+			print "\n\n"
+
+	def is_diff(self, entry):
+		(past, cur) = self.get_diff(entry)
+		return past != cur.decode('utf-8')
+
+	def get_diff(self, entry):
+		tmp_txt = ""
+		patch_ids = entry["patch_ids"]
+		# print patch_ids
+		patch_obj_arr = []
+		if(patch_ids !=None and len(patch_ids) > 0):
+			print len(patch_ids)
+			for patch_id in patch_ids:
+				# print patch_id
+
+				for mongo_patch in self.patches.find({"_id": patch_id}):
+					#patch_obj = {
+						#"diffs": patch["obj"]["diffs"],
+						#"start1": patch["obj"]["start1"],
+						#"start2": patch["obj"]["start2"],
+						#"length1": patch["obj"]["length1"],
+						#"length2": patch["obj"]["length2"]
+					#}
+                                        patch_dict=dict()
+                                        print(mongo_patch)
+                                        patch_dict["diffs"]=mongo_patch["diffs"]
+                                        patch_dict["start1"]=int(mongo_patch["start1"])
+                                        patch_dict["start2"]=int(mongo_patch["start2"])
+                                        patch_dict["length1"]=int(mongo_patch["length1"])
+                                        patch_dict["length2"]=int(mongo_patch["length2"])
+
+                                        patch_obj=dmp_module.patch_obj()
+                                        patch_obj.fill_dict(patch_dict)
+					patch_obj_arr.append(patch_obj)	
+
+				tmp_txt = self.dmp.patch_apply(patch_obj_arr, "")[0]
+		with open (os.path.join(self.path, entry["path"]), "r") as myfile:
+			data=myfile.read()
+		print "data: " + data
+		print "text: " + tmp_txt
+		# print type(data) 
+		return (tmp_txt, data)
 
 	def status(self):
 		print "untracked: \t"
@@ -120,15 +237,17 @@ class ivs:
 				entry = self.files.find({
 					"path": os.path.relpath(os.path.join(root, f), self.path)
 				})
-				if(entry.count() == 0):
-					print "\t" + os.path.relpath(os.path.join(root, f), self.path)
+				# if(entry.count() == 0):
+				# 	print "\t" + os.path.relpath(os.path.join(root, f), self.path)
 
 		entries = self.files.find()
 		for entry in entries:
-			if not os.path.exists(os.path.join(self.path, entry.get("path"))):
-				print "deleted: \t" + entry.get("path")
-			elif os.path.getmtime(os.path.join(self.path, entry.get("path"))) > entry.get("staged_ts"):
-				print "unstaged: \t" + entry.get("path")
+			if not os.path.exists(os.path.join(self.path, entry["path"])):
+				print "deleted: \t" + entry["path"]
+			elif self.is_diff(entry):
+				print "unstaged: \t" + entry["path"]
+			else:
+				pass
 
 	def update(self):
 		print "update"
@@ -150,27 +269,19 @@ if __name__ == "__main__":
 
 	repo = ivs()
 
-	# cmdline_len = len(sys.argv)
+        repo.set_path("/home/shubham/Documents/theory")
+        repo.set_dbname("test_database")
 
-	# if(cmdline_len > 1):
-	# 	if sys.argv[1] == "init":
-	# 		repo.set_path(sys.argv[2])
-	# 		repo.init()
-	# 	elif sys.argv[1] == "add":
-	# 		repo.add(sys.argv[2])
-	# 	elif sys.argv[1] == "delete":
-	# 		repo.delete()
-				
-	repo.set_path("/home/kunal15595/Documents/theory")
-	repo.set_dbname("test_database")
-	
-	repo.init()
-	repo.show(repo.files, "files")
+        repo.init()
 
-	repo.add("networks/forouzan/ch01.ppt")
-	repo.show(repo.files, "files")
-	repo.show(repo.commits, "commits")
-	repo.show(repo.staged, "staged")
-	repo.status()
+        repo.add("patch_test/a.txt")
 
-	# repo.delete()
+
+        repo.status()
+        repo.commit("yo")
+        repo.log()
+        repo.show(repo.files, "files")
+        repo.show(repo.commits, "commits")
+        repo.show(repo.staged, "staged")
+
+        #repo.delete()
