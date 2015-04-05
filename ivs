@@ -16,7 +16,14 @@ user_name=""
 passwd=""
 repo_root=""
 repo=ivs()
-valid_args=["init","commit","status","add","push","pull","delete","bare_init","clone"]
+one_arg_args=["status","delete"]
+tow_arg_args=["init","bare_init","add","push","pull"]
+three_arg_args=["clone"]
+valid_args=[]
+valid_args.append(one_arg_args)
+valid_args.append(two_arg_args)
+valid_args.append(three_arg_args)
+
 db_name=""
 mongo_client=None
 db=None
@@ -153,16 +160,24 @@ for opt,arg in optlist:
         print("Usage")
         print("pull remote_repo")
         print("push remote_repo")
+        print("add file or folder or -a")
+        print("remove file or folder")
+        print("delete")
+        print("status")
+        print("clone db_name remote_repo")
+        print("init db_name")
+        print("bare_init db_name")
+        print("commit message")
         print("valid args "+str(valid_args))
         sys.exit(0)
 
 
 if arg_list[0] in valid_args:
-    if arg_list[0] in ["status","delete"]:
+    if arg_list[0] in one_arg_args:
         if len(arg_list) !=1:
             print("wrong no of args use -h for help")
             sys.exit(2)
-    elif arg_list[0] in ["clone"]:
+    elif arg_list[0] in three_arg_args:
         if len(arg_list) !=3:
             print("wrong no of args use -h for help")
             sys.exit(2)
