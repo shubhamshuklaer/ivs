@@ -157,13 +157,7 @@ class ivs:
 			print "Loading parameters ..."
 			self.load_params()
 
-			self.branches.insert({
-				"name": "master",
-				"commit_ids": [],
-				"head": None,
-				"tail": None
-				}
-			)
+			
 			self.cur_branch = "master"
 			tmp_id = ObjectId()
 			commit_id = self.commits.insert({
@@ -180,15 +174,15 @@ class ivs:
 				"level": 1
 				}
 			)
-			self.branches.update({
-				"name": "master"
-				},{
-					'$set': {
-						"head": tmp_id,
-						"tail": tmp_id
-					}
+			self.branches.insert({
+				"name": "master",
+				"commit_ids": [],
+				"head": tmp_id,
+				"tail": tmp_id,
+				"parent_branches": []
 				}
 			)
+			
 			self.first_cid = tmp_id
 			self.cur_com_num = 1
 			self.last_cid = tmp_id
@@ -211,6 +205,7 @@ class ivs:
 			if not os.path.exists(os.path.join(self.path, entry["path"])):
 				return False
 			if self.is_diff(entry):
+				print "unstaged: " + entry["path"]
 				return False
 		return True
 
@@ -220,6 +215,10 @@ class ivs:
 		self.rollback(entry["head"])
 
 	def checkout(self, branch):
+		self.load_params()
+		if self.cur_branch == branch:
+			print "Already on branch. Aborted"
+			return
 		self.load_params()
 		if(self.branches.find_one({"name": str(branch)}) == None):
 			print "Branch doesn't exists. Aborting"
@@ -242,13 +241,17 @@ class ivs:
 		if(self.branches.find_one({"name": str(branch)}) != None):
 			print "Branch already exists. Aborting"
 			return
+
+		upstream_branches = self.branches.find_one({"name": self.get_cur_branch()})["parent_branches"]
 		self.branches.insert({
 			"name": str(branch),
 			"commit_ids": [],
 			"tail": self.last_cid,
-			"head": self.last_cid
+			"head": self.last_cid,
+			"parent_branches": upstream_branches.append(self.get_cur_branch())
 			}
 		)
+		
 		cid = ObjectId()
 		commit_id = self.commits.insert({
 			"uid":  cid,
@@ -331,7 +334,7 @@ class ivs:
 		else:
 			entry = self.files.find_one({"path": path})
 			if(entry == None or len(entry) == 0):
-				
+
 				print "Staging new file: " + str(path)
 				self.files.insert({
 						"name": os.path.basename(path), 
@@ -408,7 +411,14 @@ class ivs:
 			"level": self.get_next_com_level()
 			}
 		)
-
+		self.branches.update({
+				"name": self.cur_branch
+			},{
+				'$set': {
+					"head": cid
+				}
+			}
+		)
 		for entry in entries:
 			if entry["to_remove"] :
 				print "Removing file " + str(entry["path"])
@@ -445,7 +455,9 @@ class ivs:
 							"uid": pid,
 							"dict": patch.patch_dict,
 							"num": self.get_next_patch_num(),
-							"file_path": entry["path"]
+							"file_path": entry["path"],
+							"cid": cid,
+							"branch": self.get_cur_branch()
 							}
 						)
 
@@ -511,7 +523,9 @@ class ivs:
 							"uid": pid,
 							"dict": patch.patch_dict,
 							"num": self.get_next_patch_num(),
-							"file_path": entry["path"]
+							"file_path": entry["path"],
+							"cid": cid,
+							"branch": self.get_cur_branch()
 							}
 						)
 						
@@ -574,7 +588,9 @@ class ivs:
 							"uid": pid,
 							"dict": patch.patch_dict,
 							"num": self.get_next_patch_num(),
-							"file_path": entry["path"]
+							"file_path": entry["path"],
+							"cid": cid,
+							"branch": self.get_cur_branch()
 							}
 						)
 						
@@ -607,7 +623,7 @@ class ivs:
 		self.save_params()
 
 	def path_to_commit(self, cid):
-		path = []
+		path = [cid]
 		com = self.commits.find_one({"uid": cid})
 		if not com:
 			return path
@@ -618,9 +634,11 @@ class ivs:
 
 	def rollback(self, cid):
 		self.load_params()
+		com = self.commits.find_one({"uid": cid})
+
 		path = self.path_to_commit(cid)
-		# for p in path:
-		# 	print p
+		for p in path:
+			print p
 		if len(path) == 0:
 			print "Improper cid. Aborting"
 			return
@@ -661,6 +679,14 @@ class ivs:
 				fp.close()
 		for file_path in files_to_delete:
 			os.unlink(os.path.join(self.path, file_path))
+		self.last_cid = cid
+		self.cur_com_level = com["level"]
+		self.delete_tree(cid)
+
+	def delete_tree(self, cid):
+		child_ids = self.commits.find_one({"uid": cid})["child_ids"]
+		for child_id in child_ids:
+			delete_tree(child_id)
 
 	def tree(self):
 		print "tree"
@@ -686,14 +712,30 @@ class ivs:
 	def get_diff(self, entry):
 		recover_text = ""
 		patch_ids = entry["patch_ids"]
+		parent_branches=[]
+		temp_cur=self.branches.find_one({"name": self.get_cur_branch()})#["parent_branches"]
+		print("cc"+str(temp_cur))
+		parent_branches = parent_branches + []
+		parent_branches.append(self.get_cur_branch())
+		print parent_branches
 		# print patch_ids
 		patch_obj_arr = []
 		if(patch_ids !=None and len(patch_ids) > 0):
 			# print len(patch_ids)
-			for patch_id in patch_ids:
+			# for patch_id in patch_ids:
 				# print patch_id
 
-				for mongo_patch in self.patches.find({"uid": patch_id}):
+			# mongo_patch = self.patches.find_one({"uid": patch_id})
+			mongo_patch_cur = self.patches.find({"uid":{'$in': patch_ids}})
+			
+			if mongo_patch_cur.count() < 1:
+				pass
+			else:
+
+				for mongo_patch in mongo_patch_cur:
+					print mongo_patch
+					if not mongo_patch["branch"] in parent_branches:
+						continue
 
 					patch_dict=dict()
 					# print(mongo_patch)
@@ -705,7 +747,7 @@ class ivs:
 
 					patch_obj=dmp_module.patch_obj()
 					patch_obj.fill_dict(patch_dict)
-					patch_obj_arr.append(patch_obj)			
+					patch_obj_arr.append(patch_obj)	
 
 				recover_text = self.dmp.patch_apply(patch_obj_arr, "")[0]
 
@@ -785,28 +827,3 @@ class ivs:
 	    if float(len(t))/float(len(s)) > 0.30:
 	        return False
 	    return True
-
-if __name__ == "__main__":
-
-        repo = ivs()
-
-        repo.set_path("/home/kunal15595/Documents/theory")
-        repo.set_dbname("kunal")
-
-        repo.init()
-        # repo.create_branch('kunal')
-        # repo.checkout('kunal')
-        repo.add("-a")
-        repo.add("networks/tanenbaum/a.txt")
-        repo.remove("networks/forouzan/ch01.txt")
-
-        repo.status()
-        repo.commit("yo")
-        repo.log()
-        # repo.show(repo.files, "files")
-        #repo.show(repo.commits, "commits")
-        # repo.show(repo.staged, "staged")
-
-        #repo.save_params()
-
-        # repo.delete()

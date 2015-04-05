@@ -16,7 +16,7 @@ user_name=""
 passwd=""
 repo_root=""
 repo=ivs()
-valid_args=["init","commit","status","add","push","pull","delete"]
+valid_args=["init","commit","status","add","push","pull","delete","rm","branch","chkout","rollback"]
 db_name=""
 mongo_client=None
 db=None
@@ -55,7 +55,9 @@ def get_db_name():
 
 def repo_add():
     repo.add(arg_list[1])
-    repo.status()
+
+def repo_remove():
+    repo.remove(arg_list[1])
 
 def repo_init():
     repo.init()
@@ -182,6 +184,16 @@ if arg_list[0] in valid_args:
         else:
             if arg_list[0] == "add":
                 repo_add()
+            elif arg_list[0] == "rm":
+                repo_remove()
+            elif arg_list[0] == "branch":
+                repo.create_branch(arg_list[1])
+            elif arg_list[0] == "chkout":
+                repo.checkout(arg_list[1])
+            elif arg_list[0] == "rollback":
+                repo.rollback(arg_list[1])
+            elif arg_list[0] == "db":
+                repo_remove()
             elif arg_list[0] == "commit":
                 repo_commit()
             elif arg_list[0] == "status":
