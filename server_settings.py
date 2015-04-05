@@ -1,3 +1,4 @@
+import os
 def init():
     global port
     global num_forks
@@ -7,4 +8,4 @@ def init():
     port=8080
     num_forks=2
     num_threads_per_fork=2
-    service_dir="service_dir"
+    service_dir=os.path.join(os.getcwd(),"service_dir")

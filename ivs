@@ -9,6 +9,8 @@ from ivs_base import ivs
 import os
 import os.path
 from pymongo import Connection
+from get_data_for_commits import get_data_for_commits
+from bson.json_util import dumps,loads
 
 user_name=""
 passwd=""
@@ -68,21 +70,39 @@ def repo_delete():
     repo.delete()
 
 def get_push_data():
-    pass
+    need_list=loads(process(arg_list[1],"get_need",get_pull_data,None))
+    return get_data_for_commits(db_name,need_list)
 
 def get_pull_data():
     global mongo_client
     global db
     mongo_client=Connection()
     db=mongo_client[db_name]
+    list_commit_uids=[]
+    for result in db.commits.find({ },{ 'uid': 1, '_id':0 }):
+        list_commit_uids.append(str(result["uid"]))
     
+    return dumps(list_commit_uids)
 
 def push_delta_process():
-    process(arg_list[1],"push",get_push_data,push_process)
+    pass
+    #process(arg_list[1],"push",get_push_data,push_process)
 
 def process_pull_data(data):
-    print(data)
+    global mongo_client
+    global db
+    mongo_client=Connection()
+    db=mongo_client[db_name]
 
+    data_list=loads(data)
+    
+    print(data_list)
+    
+    for entry in data_list["commits"]:
+        db.commits.insert(entry)
+    
+    for entry in data_list["patches"]:
+        db.patches.insert(entry)
     
 def process_push_data(data):
     print(data)
@@ -106,6 +126,8 @@ def process(repo,action,get_data_func,process_data_func):
 
     if process_data_func !=None:
         process_data_func(data)
+
+    return data
 
 def get_auth():
     global user_name
@@ -157,6 +179,7 @@ if arg_list[0] in valid_args:
             if arg_list[0] == "pull":
                 process(arg_list[1],"pull",get_pull_data,process_pull_data)
             elif arg_list[0] == "push":
+                process(arg_list[1],"push",get_push_data,process_push_data)
                 pass
         else:
             if arg_list[0] == "add":
