@@ -16,7 +16,7 @@ user_name=""
 passwd=""
 repo_root=""
 repo=ivs()
-valid_args=["init","commit","status","add","push","pull","delete"]
+valid_args=["init","commit","status","add","push","pull","delete","bare_init"]
 db_name=""
 mongo_client=None
 db=None
@@ -59,6 +59,9 @@ def repo_add():
 
 def repo_init():
     repo.init()
+
+def repo_bare_init():
+    repo.init(True)
 
 def repo_commit():
     repo.commit(arg_list[1])
@@ -159,12 +162,15 @@ if arg_list[0] in valid_args:
             print("wrong no of args use -h for help")
             sys.exit(2)
 
-    if arg_list[0] == "init":
+    if arg_list[0] == "init" or arg_list[0] == "bare_init":
         repo_root=os.getcwd()
         db_name=arg_list[1]
         set_repo_param()
         print(repo.get_path(),repo.get_dbname())
-        repo_init()
+        if arg_list[0] == "init":
+            repo_init()
+        elif arg_list[0] == "bare_init":
+            repo_bare_init()
 
     else:
         get_repo_root()

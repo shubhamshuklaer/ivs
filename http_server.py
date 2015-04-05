@@ -10,7 +10,7 @@ class http_server(PooledProcessMixIn,HTTPServer):
     def __init__(self):
         self._process_n=server_settings.num_forks
         self._thread_n=server_settings.num_threads_per_fork
-        HTTPServer.__init__(self,("127.0.0.1",server_settings.port),request_handler)
+        HTTPServer.__init__(self,("0.0.0.0",server_settings.port),request_handler)
         
         #wrap socket provides a socket-like wrapper that also encrypts and decrypts the data going over the socket with SSL.
         self.socket=ssl.wrap_socket(self.socket,keyfile='server.pem',certfile='server.pem',server_side=True)

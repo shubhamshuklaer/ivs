@@ -147,7 +147,7 @@ class ivs:
 	def get_full_path(self, path):
 		return os.path.join(self.path, path)
 
-	def init(self):
+	def init(self,server=False):
 		
 		repo_dir=os.path.join(self.path,".ivs")
 
@@ -157,46 +157,49 @@ class ivs:
 			print "Loading parameters ..."
 			self.load_params()
 
-			self.branches.insert({
-				"name": "master",
-				"commit_ids": [],
-				"head": None,
-				"tail": None
-				}
-			)
 			self.cur_branch = "master"
 			tmp_id = ObjectId()
-			commit_id = self.commits.insert({
-				"uid":  tmp_id,
-				"patch_ids": [],
-				"ts": time.time(),
-				"msg": "Initial Commit on master",
-				"added": [],
-				"deleted": [],
-				"parent_id": None,
-				"branch": self.cur_branch,
-				"child_ids": [],
-				"num": 1,
-				"level": 1
-				}
-			)
-			self.branches.update({
-				"name": "master"
-				},{
-					'$set': {
-						"head": tmp_id,
-						"tail": tmp_id
-					}
-				}
-			)
-			self.first_cid = tmp_id
-			self.cur_com_num = 1
-			self.last_cid = tmp_id
-			self.cur_com_level = 1
-			self.cur_patch_num = 0
+
+                        self.branches.insert({
+                                "name": "master",
+                                "commit_ids": [],
+                                "head": None,
+                                "tail": None
+                                }
+                        )
+                        if not server:
+                            commit_id = self.commits.insert({
+                                    "uid":  tmp_id,
+                                    "patch_ids": [],
+                                    "ts": time.time(),
+                                    "msg": "Initial Commit on master",
+                                    "added": [],
+                                    "deleted": [],
+                                    "parent_id": None,
+                                    "branch": self.cur_branch,
+                                    "child_ids": [],
+                                    "num": 1,
+                                    "level": 1
+                                    }
+                            )
+                        self.branches.update({
+                                "name": "master"
+                                },{
+                                        '$set': {
+                                                "head": tmp_id,
+                                                "tail": tmp_id
+                                        }
+                                }
+                        )
+                    
+                        self.first_cid = tmp_id
+                        self.cur_com_num = 1
+                        self.last_cid = tmp_id
+                        self.cur_com_level = 1
+                        self.cur_patch_num = 0
 		else:
 			self.delete()
-			self.init()
+			self.init(server)
 
 		self.save_params()
 
