@@ -229,7 +229,7 @@ class ivs:
 			print "You have uncommitted changes. Aborting checkout"
 			return
 		
-		print "Checking out : " + str(branch)
+		print "\nChecking out : " + str(branch)
 		self.restore_branch_data(branch)
 		self.cur_branch = branch
 		branch = self.branches.find_one({"name": str(branch)})
@@ -357,7 +357,7 @@ class ivs:
 					print str(entry["path"]) + " : File type not supported. Aborting"
 					return
 				if self.is_diff(entry):
-					print "Staging modified file: " + str(path)
+					print "\nStaging modified file: " + str(path)
 					self.files.update({
 							"path": path
 						},
@@ -398,7 +398,7 @@ class ivs:
 			print "Nothing to commit. Aborting"
 			return
 		else:
-			print "Commit initiated"
+			print "\nCommit"
 		cid = ObjectId()
 		commit_id = self.commits.insert({
 			"uid":  cid,
@@ -424,7 +424,7 @@ class ivs:
 		)
 		for entry in entries:
 			if entry["to_remove"] :
-				print "Removing file " + str(entry["path"])
+				print "Removing : " + str(entry["path"])
 				self.files.update({
 						"path": str(entry["path"])
 					},
@@ -493,7 +493,7 @@ class ivs:
 						)
 
 			elif entry["to_add"]:
-				print "Adding file " + str(entry["path"])
+				print "Adding : " + str(entry["path"])
 				self.files.update({
 						"path": str(entry["path"])
 					},
@@ -558,7 +558,7 @@ class ivs:
 							}
 						)
 			else:
-				print "Committing file " + str(entry["path"])
+				# print "Committing file " + str(entry["path"])
 				self.files.update({
 						"path": str(entry["path"])
 					},
@@ -625,6 +625,7 @@ class ivs:
 		self.last_cid = cid
 		self.save_params()
 
+
 	def path_to_commit(self, cid):
 		path = [cid]
 		com = self.commits.find_one({"uid": cid})
@@ -644,7 +645,7 @@ class ivs:
 		if len(path) == 0:
 			print "Improper cid. Aborting"
 			return
-		print "Rolling back to : " + str(cid)
+		# print "Rolling back to : " + str(cid)
 		files_to_delete = set()
 		for com_id in path:
 			commit = self.commits.find_one({"uid": com_id})
@@ -696,15 +697,16 @@ class ivs:
 		for child_id in child_ids:
 			self.delete_tree(child_id)
 
-	def tree(self):
+	def tree(self, level = 0):
 		print "tree"
+
 
 	def log(self):
 		self.load_params()
 		print "\n"
 		commits = self.commits.find( { '$query': {}, '$orderby': { "ts" : -1 } } )
 		for commit in commits:
-			print "Commit \t: " + str(commit["_id"])
+			print "Commit \t: " + str(commit["uid"])
 			print "Message\t: " + str(commit["msg"])
 			print "" + datetime.datetime.fromtimestamp(commit["ts"]).strftime('%Y-%m-%d %H:%M:%S')
 			print "\n"
