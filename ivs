@@ -17,12 +17,11 @@ passwd=""
 repo_root=""
 repo=ivs()
 one_arg_args=["status","delete"]
-tow_arg_args=["init","bare_init","add","push","pull"]
+two_arg_args=["init","bare_init","add","push","pull","commit"]
 three_arg_args=["clone"]
 valid_args=[]
-valid_args.append(one_arg_args)
-valid_args.append(two_arg_args)
-valid_args.append(three_arg_args)
+valid_args=one_arg_args+two_arg_args
+valid_args=valid_args+three_arg_args
 
 db_name=""
 mongo_client=None
@@ -85,7 +84,11 @@ def repo_delete():
     repo.delete()
 
 def get_push_data():
-    need_list=loads(process(arg_list[1],"get_need",get_pull_data,None))
+    need_list_str=process(arg_list[1],"get_need",get_pull_data,None)
+    if need_list_str != "":
+        need_list=loads(need_list_str)
+    else:
+        need_list=[]
     return get_data_for_commits(db_name,need_list)
 
 def get_pull_data():
@@ -134,11 +137,16 @@ def process(repo,action,get_data_func,process_data_func):
     conn.request("POST","",body,header)
     response=conn.getresponse()
     print(response.status,response.reason)
-    data=response.read()
-    print(data)
+    data=""
+    if response.status==200:
+        data=response.read()
+        print(data)
 
-    if process_data_func !=None:
-        process_data_func(data)
+        if process_data_func !=None:
+            process_data_func(data)
+
+    else:
+        sys.exit(2)
 
     return data
 
@@ -174,14 +182,17 @@ for opt,arg in optlist:
 
 if arg_list[0] in valid_args:
     if arg_list[0] in one_arg_args:
+        print("h")
         if len(arg_list) !=1:
             print("wrong no of args use -h for help")
             sys.exit(2)
     elif arg_list[0] in three_arg_args:
+        print("j")
         if len(arg_list) !=3:
             print("wrong no of args use -h for help")
             sys.exit(2)
     else:
+        print("k")
         if len(arg_list) !=2:
             print("wrong no of args use -h for help")
             sys.exit(2)

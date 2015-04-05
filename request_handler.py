@@ -16,7 +16,10 @@ class request_handler(BaseHTTPRequestHandler):
         user_name=self.headers.getheader('user')
         passwd=self.headers.getheader('passwd')
         data_to_send=""
-        if user_name=="s" and passwd=="s":
+        mong_conn=Connection()
+        db=mong_conn[server_settings.user_auth_db_name]
+        auth_ret=db.users.find({"user_name":user_name,"passwd":passwd}).count()>0
+        if auth_ret:
             length = int(self.headers.getheader('content-length'))
             body=self.rfile.read(length)
             param=urlparse.parse_qs(body)
