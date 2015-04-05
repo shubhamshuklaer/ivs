@@ -144,6 +144,9 @@ class ivs:
 	def set_cur_branch(self, branch):
 		self.cur_branch = branch
 
+	def get_full_path(self, path):
+		return os.path.join(self.path, path)
+
 	def init(self):
 		
 		repo_dir=os.path.join(self.path,".ivs")
@@ -209,14 +212,20 @@ class ivs:
 		return True
 
 	def restore_branch_data(self, branch):
+		print "Restoring data on branch : " + str(branch)
 		entry = self.branches.find_one({"name": branch})
 		self.rollback(entry["head"])
 
 	def checkout(self, branch):
 		self.load_params()
-		print "Checking out : " + str(branch)
+		if(self.branches.find_one({"name": str(branch)}) == None):
+			print "Branch doesn't exists. Aborting"
+			return
 		if not self.is_all_committed():
 			print "You have uncommitted changes. Aborting checkout"
+			return
+		
+		print "Checking out : " + str(branch)
 		self.restore_branch_data(branch)
 		self.cur_branch = branch
 		branch = self.branches.find_one({"name": str(branch)})
@@ -237,9 +246,9 @@ class ivs:
 			"head": self.last_cid
 			}
 		)
-		tmp_id = ObjectId()
+		cid = ObjectId()
 		commit_id = self.commits.insert({
-			"uid":  tmp_id,
+			"uid":  cid,
 			"patch_ids": [],
 			"ts": time.time(),
 			"msg": "Initial Commit on "+str(branch),
@@ -253,12 +262,20 @@ class ivs:
 
 			}
 		)
+		self.commits.update({
+			"uid": self.last_cid
+			},{
+				'$addToSet': {
+					"child_ids": cid
+				}
+			}
+		)
 		self.dec_com_level()
 		self.branches.update({
 			"name": str(branch)
 			},{
 				'$set': {
-					"head": tmp_id
+					"head": cid
 				}
 			}
 		)
@@ -274,7 +291,8 @@ class ivs:
 					if not self.istext(os.path.join(root, f)):
 						print str(os.path.relpath(os.path.join(root, f), self.path)) + " : File type not supported. Aborting"
 						continue
-					entry = self.files.find_one({"path": os.path.join(root, f)})
+					entry = self.files.find_one({"path": os.path.relpath(os.path.join(root, f), self.path)})
+					
 					if(entry == None or len(entry) == 0):
 						self.files.insert({
 								"name": f, 
@@ -284,10 +302,14 @@ class ivs:
 								"patch_ids": [],
 								"is_present": True,
 								"to_remove": False,
-								"to_add": True
+								"to_add": True,
+								"added_cids": [],
+								"deleted_cids": []
 							}
 						)
 					else:
+						if not self.is_diff(entry):
+							continue
 						self.files.update({
 								"path": os.path.relpath(os.path.join(root, f), self.path)
 							},
@@ -318,7 +340,9 @@ class ivs:
 						"patch_ids": [],
 						"is_present": True,
 						"to_remove": False,
-						"to_add": True
+						"to_add": True,
+						"added_cids": [],
+						"deleted_cids": []
 					}
 				)
 			else:
@@ -336,6 +360,8 @@ class ivs:
 							} 
 						} 
 					)
+				else:
+					print "No change since last commit. Aborting"
 		self.save_params()
 	
 	def remove(self, path):
@@ -363,9 +389,9 @@ class ivs:
 			return
 		else:
 			print "Commit initiated"
-		tmp_id = ObjectId()
+		cid = ObjectId()
 		commit_id = self.commits.insert({
-			"uid":  tmp_id,
+			"uid":  cid,
 			"patch_ids": [],
 			"ts": time.time(),
 			"msg": msg,
@@ -378,6 +404,7 @@ class ivs:
 			"level": self.get_next_com_level()
 			}
 		)
+
 		for entry in entries:
 			if entry["to_remove"] :
 				print "Removing file " + str(entry["path"])
@@ -397,16 +424,15 @@ class ivs:
 				
 				if(len(patches) > 0):
 					
-
 					self.commits.update({
 						"uid": self.last_cid
 						},{
 							'$addToSet': {
-								"child_ids": tmp_id
+								"child_ids": cid
 							}
 						}
 					)
-					self.last_cid = tmp_id
+					
 
 					# print patches[0].patchs
 					for patch in patches:
@@ -414,7 +440,8 @@ class ivs:
 						self.patches.insert({
 							"uid": pid,
 							"dict": patch.patch_dict,
-							"num": self.get_next_patch_num()
+							"num": self.get_next_patch_num(),
+							"file_path": entry["path"]
 							}
 						)
 
@@ -428,19 +455,18 @@ class ivs:
 									"is_present": False
 								},
 								'$addToSet': {
-									"patch_ids": pid
+									"patch_ids": pid,
+									"deleted_cids": cid
 								}
 							} 
 						)
 
 						self.commits.update({
-							"_id": commit_id
+								"uid": cid
 							},
 							{
 								'$addToSet': {
-									"patch_ids": pid
-								},
-								'$addToSet': {
+									"patch_ids": pid,
 									"deleted": entry["path"]
 								},
 								
@@ -465,16 +491,15 @@ class ivs:
 				patches = self.dmp.patch_make(tmp_txt, data.decode('utf-8'))
 				if(len(patches) > 0):
 					print "Committing : " + str(entry["path"])
-					
+					print cid, self.last_cid
 					self.commits.update({
 						"uid": self.last_cid
 						},{
 							'$addToSet': {
-								"child_ids": tmp_id
+								"child_ids": cid
 							}
 						}
 					)
-					self.last_cid = tmp_id
 
 					# print patches[0].patchs
 					for patch in patches:
@@ -482,7 +507,72 @@ class ivs:
 						self.patches.insert({
 							"uid": pid,
 							"dict": patch.patch_dict,
-							"num": self.get_next_patch_num()
+							"num": self.get_next_patch_num(),
+							"file_path": entry["path"]
+							}
+						)
+						
+						self.files.update({
+								"path": entry["path"]
+							},
+							{ 
+								'$set': {
+									"staged": False, 
+									"staged_ts": time.time()
+								},
+								'$addToSet': {
+									"patch_ids": pid,
+									"added_cids": cid
+								}
+							} 
+						)
+						print "adding patch " + str(pid) + "to commit " + str(cid)
+						self.commits.update({
+								"uid": cid
+							},
+							{
+								'$addToSet': {
+									"patch_ids": pid,
+									"added": entry["path"]
+								}
+								
+							}
+						)
+			else:
+				print "Committing file " + str(entry["path"])
+				self.files.update({
+						"path": str(entry["path"])
+					},
+					{ 
+						'$set': {
+							"staged": False
+						} 
+					} 
+				)
+				# print self.files.find_one({"path": entry["path"]})["staged"]
+				(tmp_txt, data) = self.get_diff(entry)
+				# print type(tmp_txt) 
+				patches = self.dmp.patch_make(tmp_txt, data.decode('utf-8'))
+				if(len(patches) > 0):
+					print "Committing : " + str(entry["path"])
+					
+					self.commits.update({
+						"uid": self.last_cid
+						},{
+							'$addToSet': {
+								"child_ids": cid
+							}
+						}
+					)
+
+					# print patches[0].patchs
+					for patch in patches:
+						pid = ObjectId()
+						self.patches.insert({
+							"uid": pid,
+							"dict": patch.patch_dict,
+							"num": self.get_next_patch_num(),
+							"file_path": entry["path"]
 							}
 						)
 						
@@ -501,37 +591,72 @@ class ivs:
 							} 
 						)
 						self.commits.update({
-							"_id": commit_id
+								"uid": cid
 							},
 							{
 								'$addToSet': {
-									"patch_ids": pid
-								},
-								'$addToSet': {
+									"patch_ids": pid,
 									"added": entry["path"]
-								},
+								}
 								
 							}
 						)
-			else:
-				print entry["path"]
-				self.files.update({
-						"path": entry["path"]
-					},
-					{ 
-						'$set': {
-							"staged": False
-						} 
-					} 
-				)
+		self.last_cid = cid
 		self.save_params()
 
-	def rollback(self, commit_id):
+	def path_to_commit(self, cid):
+		path = []
+		com = self.commits.find_one({"uid": cid})
+		if not com:
+			return path
+		while len(path) < 100 and cid != self.first_cid:
+			cid = self.commits.find_one({"uid": cid})["parent_id"]
+			path.insert(0, cid)
+		return path
+
+	def rollback(self, cid):
 		self.load_params()
-		print "Rolling back to : " + str(commit_id)
-		entries = self.files.find()
-		for entry in entries:
-			(tmp_txt, data) = self.get_diff(entry)
+		path = self.path_to_commit(cid)
+		if len(path) == 0:
+			print "Improper cid. Aborting"
+			return
+		print "Rolling back to : " + str(cid)
+		files_to_delete = set()
+		for com_id in path:
+			commit = self.commits.find_one({"uid": com_id})
+			for f in commit["added"]:
+				if not os.path.exists(os.path.dirname(self.get_full_path(f))):
+					os.makedirs(os.path.dirname(self.get_full_path(f)))
+				if f in files_to_delete:
+					files_to_delete.remove({f})
+				open(self.get_full_path(f), 'w').close()
+			for f in commit["deleted"]:
+				files_to_delete.update({f})
+			for patch_id in commit["patch_ids"]:
+				patch_obj_arr = []
+				file_path = None
+				for mongo_patch in self.patches.find({"uid": patch_id}):
+
+					patch_dict=dict()
+					# print(mongo_patch)
+					patch_dict["diffs"]=mongo_patch["dict"]["diffs"]
+					patch_dict["start1"]=int(mongo_patch["dict"]["start1"])
+					patch_dict["start2"]=int(mongo_patch["dict"]["start2"])
+					patch_dict["length1"]=int(mongo_patch["dict"]["length1"])
+					patch_dict["length2"]=int(mongo_patch["dict"]["length2"])
+
+					patch_obj=dmp_module.patch_obj()
+					patch_obj.fill_dict(patch_dict)
+					patch_obj_arr.append(patch_obj)	
+
+					file_path = mongo_patch["file_path"]
+				recover_text = self.dmp.patch_apply(patch_obj_arr, "")[0]
+
+				fp = open(self.get_full_path(file_path),'w')
+				fp.write(recover_text)
+				fp.close()
+		for file_path in files_to_delete:
+			os.unlink(os.path.join(self.path, file_path))
 
 	def tree(self):
 		print "tree"
@@ -547,6 +672,8 @@ class ivs:
 			print "\n"
 
 	def is_diff(self, entry):
+		if not entry:
+			return False
 		if not os.path.exists(os.path.join(self.path, entry["path"])):
 			return false
 		(past, cur) = self.get_diff(entry)
@@ -558,14 +685,14 @@ class ivs:
 		# print patch_ids
 		patch_obj_arr = []
 		if(patch_ids !=None and len(patch_ids) > 0):
-			print len(patch_ids)
+			# print len(patch_ids)
 			for patch_id in patch_ids:
 				# print patch_id
 
 				for mongo_patch in self.patches.find({"uid": patch_id}):
 
 					patch_dict=dict()
-					print(mongo_patch)
+					# print(mongo_patch)
 					patch_dict["diffs"]=mongo_patch["dict"]["diffs"]
 					patch_dict["start1"]=int(mongo_patch["dict"]["start1"])
 					patch_dict["start2"]=int(mongo_patch["dict"]["start2"])
@@ -658,7 +785,7 @@ if __name__ == "__main__":
         # repo.init()
         # repo.create_branch('kunal')
         # repo.checkout('kunal')
-        # repo.add("-a")
+        repo.add("-a")
         # repo.add("networks/tanenbaum/a.txt")
         # repo.remove("networks/tanenbaum/a.txt")
 
