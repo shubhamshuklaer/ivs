@@ -328,9 +328,6 @@ class ivs:
 		else:
 			entry = self.files.find_one({"path": path})
 			if(entry == None or len(entry) == 0):
-				if not self.istext(os.path.join(root, entry["path"])):
-					print str(entry["path"]) + " : File type not supported. Aborting"
-					return
 				print "Staging new file: " + str(path)
 				self.files.insert({
 						"name": os.path.basename(path), 
@@ -346,6 +343,9 @@ class ivs:
 					}
 				)
 			else:
+				if not self.istext(os.path.join(self.path, entry["path"])):
+					print str(entry["path"]) + " : File type not supported. Aborting"
+					return
 				if self.is_diff(entry):
 					print "Staging modified file: " + str(path)
 					self.files.update({
@@ -775,23 +775,23 @@ class ivs:
 	        return False
 	    return True
 
-if __name__ == "__main__":
+#if __name__ == "__main__":
 
-        repo = ivs()
+        #repo = ivs()
 
-        repo.set_path("/home/kunal15595/Documents/theory")
-        repo.set_dbname("kunal")
+        #repo.set_path("/home/kunal15595/Documents/theory")
+        #repo.set_dbname("kunal")
 
         # repo.init()
         # repo.create_branch('kunal')
         # repo.checkout('kunal')
-        repo.add("-a")
+        #repo.add("-a")
         # repo.add("networks/tanenbaum/a.txt")
         # repo.remove("networks/tanenbaum/a.txt")
 
         # repo.status()
-        repo.commit("yo")
-        repo.log()
+        #repo.commit("yo")
+        #repo.log()
         # repo.show(repo.files, "files")
         #repo.show(repo.commits, "commits")
         # repo.show(repo.staged, "staged")
