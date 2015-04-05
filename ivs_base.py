@@ -245,12 +245,13 @@ class ivs:
 			return
 
 		upstream_branches = self.branches.find_one({"name": self.get_cur_branch()})["parent_branches"]
+		upstream_branches.append(self.get_cur_branch())
 		self.branches.insert({
 			"name": str(branch),
 			"commit_ids": [],
 			"tail": self.last_cid,
 			"head": self.last_cid,
-			"parent_branches": upstream_branches.append(self.get_cur_branch())
+			"parent_branches": upstream_branches
 			}
 		)
 		
@@ -639,8 +640,7 @@ class ivs:
 		com = self.commits.find_one({"uid": cid})
 
 		path = self.path_to_commit(cid)
-		for p in path:
-			print p
+
 		if len(path) == 0:
 			print "Improper cid. Aborting"
 			return
@@ -663,7 +663,6 @@ class ivs:
 
 			patch_obj_arr = []
 			file_path = None
-			print("ss"+str(commit))
 			for mongo_patch in mongo_patch_cur:
 
 				patch_dict=dict()
@@ -681,7 +680,7 @@ class ivs:
 				file_path = mongo_patch["file_path"]
 
 			recover_text = self.dmp.patch_apply(patch_obj_arr, "")[0]
-			print "recover text: " + recover_text
+			# print "recover text: " + recover_text
 			fp = open(self.get_full_path(file_path),'w')
 			fp.write(recover_text)
 			fp.close()
@@ -723,10 +722,8 @@ class ivs:
 		patch_ids = entry["patch_ids"]
 		parent_branches=[]
 		temp_cur=self.branches.find_one({"name": self.get_cur_branch()})#["parent_branches"]
-		print("cc"+str(temp_cur))
 		parent_branches = parent_branches + []
 		parent_branches.append(self.get_cur_branch())
-		print parent_branches
 		# print patch_ids
 		patch_obj_arr = []
 		if(patch_ids !=None and len(patch_ids) > 0):
@@ -742,7 +739,6 @@ class ivs:
 			else:
 
 				for mongo_patch in mongo_patch_cur:
-					print mongo_patch
 					if not mongo_patch["branch"] in parent_branches:
 						continue
 
