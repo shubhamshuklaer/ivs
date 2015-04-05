@@ -16,7 +16,14 @@ user_name=""
 passwd=""
 repo_root=""
 repo=ivs()
-valid_args=["init","commit","status","add","push","pull","delete","rm","branch","chkout","rollback"]
+
+one_arg_args=["status","delete","log"]
+two_arg_args=["init","bare_init","add","push","pull","commit","rm","branch","chkout","rollback"]
+three_arg_args=["clone"]
+valid_args=[]
+valid_args=one_arg_args+two_arg_args
+valid_args=valid_args+three_arg_args
+
 db_name=""
 mongo_client=None
 db=None
@@ -62,6 +69,14 @@ def repo_remove():
 def repo_init():
     repo.init()
 
+def repo_bare_init():
+    repo.init(True)
+
+def repo_clone():
+    get_auth()
+    repo_bare_init()
+    process(arg_list[2],"pull",get_pull_data,process_pull_data)
+
 def repo_commit():
     repo.commit(arg_list[1])
 
@@ -72,7 +87,11 @@ def repo_delete():
     repo.delete()
 
 def get_push_data():
-    need_list=loads(process(arg_list[1],"get_need",get_pull_data,None))
+    need_list_str=process(arg_list[1],"get_need",get_pull_data,None)
+    if need_list_str != "":
+        need_list=loads(need_list_str)
+    else:
+        need_list=[]
     return get_data_for_commits(db_name,need_list)
 
 def get_pull_data():
@@ -121,11 +140,16 @@ def process(repo,action,get_data_func,process_data_func):
     conn.request("POST","",body,header)
     response=conn.getresponse()
     print(response.status,response.reason)
-    data=response.read()
-    print(data)
+    data=""
+    if response.status==200:
+        data=response.read()
+        print(data)
 
-    if process_data_func !=None:
-        process_data_func(data)
+        if process_data_func !=None:
+            process_data_func(data)
+
+    else:
+        sys.exit(2)
 
     return data
 
@@ -147,26 +171,46 @@ for opt,arg in optlist:
         print("Usage")
         print("pull remote_repo")
         print("push remote_repo")
+        print("add file or folder or -a")
+        print("remove file or folder")
+        print("delete")
+        print("status")
+        print("clone db_name remote_repo")
+        print("init db_name")
+        print("bare_init db_name")
+        print("commit message")
         print("valid args "+str(valid_args))
         sys.exit(0)
 
 
 if arg_list[0] in valid_args:
-    if arg_list[0] not in ["status","delete"]:
-        if len(arg_list) !=2:
-            print("wrong no of args use -h for help")
-            sys.exit(2)
-    else:
+    if arg_list[0] in one_arg_args:
+        print("h")
         if len(arg_list) !=1:
             print("wrong no of args use -h for help")
             sys.exit(2)
+    elif arg_list[0] in three_arg_args:
+        print("j")
+        if len(arg_list) !=3:
+            print("wrong no of args use -h for help")
+            sys.exit(2)
+    else:
+        print("k")
+        if len(arg_list) !=2:
+            print("wrong no of args use -h for help")
+            sys.exit(2)
 
-    if arg_list[0] == "init":
+    if arg_list[0] in ["init","bare_init","clone"]:
         repo_root=os.getcwd()
         db_name=arg_list[1]
         set_repo_param()
         print(repo.get_path(),repo.get_dbname())
-        repo_init()
+        if arg_list[0] == "init":
+            repo_init()
+        elif arg_list[0] == "bare_init":
+            repo_bare_init()
+        elif arg_list[0] == "clone":
+            repo_clone()
 
     else:
         get_repo_root()
@@ -200,6 +244,8 @@ if arg_list[0] in valid_args:
                 repo_status()
             elif arg_list[0] == "delete":
                 repo_delete()
+            elif arg_list[0] == "log":
+                repo.log()
 
 else:
     print("Wrong argument use -h for help")

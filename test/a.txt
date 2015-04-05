@@ -1,3 +1,7 @@
+<<<<<<< HEAD
 sdg
 fsgs
 fg
+=======
+hell
+>>>>>>> 69800bd7c5d57fce4e57e916c4d9e638fa62d3c4

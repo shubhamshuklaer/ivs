@@ -16,14 +16,19 @@ class request_handler(BaseHTTPRequestHandler):
         user_name=self.headers.getheader('user')
         passwd=self.headers.getheader('passwd')
         data_to_send=""
-        if user_name=="s" and passwd=="s":
-            length = int(self.headers.getheader('content-length'))
-            body=self.rfile.read(length)
-            param=urlparse.parse_qs(body)
-            action=param["action"][0]
-            message=loads(param["message"][0])
-            path=param["path"][0][1:]#[1:] is so that we skip the first char which is /
+        mong_conn=Connection()
+        db=mong_conn[server_settings.user_auth_db_name]
+        length = int(self.headers.getheader('content-length'))
+        body=self.rfile.read(length)
+        param=urlparse.parse_qs(body)
+        action=param["action"][0]
+        message=loads(param["message"][0])
+        path=param["path"][0][1:]#[1:] is so that we skip the first char which is /
 
+
+        auth_ret=db.users.find({"user_name":user_name,"passwd":passwd,"repo":path}).count()>0
+
+        if auth_ret:
             mongo_conn=Connection()
             print(server_settings.service_dir)
             repo_path=os.path.abspath(os.path.join(server_settings.service_dir,path))    
