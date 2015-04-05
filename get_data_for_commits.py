@@ -27,6 +27,5 @@ def get_data_for_commits(db_name,commit_uid_list):
 
 
     result={"commits":selected_commits_list,"patches":selected_patches_list}
-    print(result)
 
     return dumps(result)

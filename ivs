@@ -80,13 +80,10 @@ def get_pull_data():
     db=mongo_client[db_name]
     list_commit_uids=[]
     for result in db.commits.find({ },{ 'uid': 1, '_id':0 }):
-        list_commit_uids.append(str(result["uid"]))
+        list_commit_uids.append(result["uid"])
     
     return dumps(list_commit_uids)
 
-def push_delta_process():
-    pass
-    #process(arg_list[1],"push",get_push_data,push_process)
 
 def process_pull_data(data):
     global mongo_client
@@ -96,7 +93,7 @@ def process_pull_data(data):
 
     data_list=loads(data)
     
-    print(data_list)
+    print("Processing pull response"+str(data_list))
     
     for entry in data_list["commits"]:
         db.commits.insert(entry)
@@ -123,6 +120,7 @@ def process(repo,action,get_data_func,process_data_func):
     response=conn.getresponse()
     print(response.status,response.reason)
     data=response.read()
+    print(data)
 
     if process_data_func !=None:
         process_data_func(data)

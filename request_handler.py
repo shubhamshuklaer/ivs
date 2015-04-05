@@ -44,6 +44,9 @@ class request_handler(BaseHTTPRequestHandler):
                 diff_list=[]
 
                 if action=="push":
+
+                    print("push message"+str(message))
+
                     for entity in message["commits"]:
                         db.commits.insert(entity)
                         
@@ -54,7 +57,7 @@ class request_handler(BaseHTTPRequestHandler):
                 elif action=="get_need" or action=="pull":
 
                     for result in db.commits.find({ },{ 'uid': 1, '_id':0 }):
-                        list_commit_uids.append(str(result["uid"]))
+                        list_commit_uids.append(result["uid"])
 
 
                     if action=="get_need":
@@ -62,7 +65,7 @@ class request_handler(BaseHTTPRequestHandler):
                             if item not in list_commit_uids:
                                 diff_list.append(item)
 
-                        data_to_send=diff_list
+                        data_to_send=dumps(diff_list)
                     elif action=="pull":
                         for item in list_commit_uids:
                             if item not in message:
