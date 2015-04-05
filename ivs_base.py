@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+from __future__ import division
 from pymongo import Connection
 from pymongo import MongoClient
 from bson.objectid import ObjectId
@@ -13,9 +14,11 @@ import datetime
 import bson
 import json
 
+import string
+
 class ivs:
 	def __init__(self):
-            pass
+		pass
 
 	def set_path(self, path):
 		self.path = path
@@ -41,6 +44,36 @@ class ivs:
 	def set_dbname(self, name):
 		self.dbname = name
 
+	def get_next_com_num(self):
+		self.cur_com_num += 1
+		return self.cur_com_num
+	
+	def inc_com_num(self):
+		self.cur_com_num += 1
+
+	def get_next_patch_num(self):
+		self.cur_patch_num += 1
+		return self.cur_patch_num
+	
+	def inc_patch_num(self):
+		self.cur_patch_num += 1
+
+	def get_next_com_level(self):
+		self.cur_com_level += 1
+		return self.cur_com_level
+
+	def inc_com_level(self):
+		self.cur_com_level += 1
+
+	def dec_com_level(self):
+		self.cur_com_level -= 1
+
+	def dec_com_num(self):
+		self.cur_com_num -= 1
+
+	def set_cur_com_level(self, num):
+		self.cur_com_level = num
+
 	def save_params(self):
 		param = self.params.find_one({"path": self.path})
 		if(param == None):
@@ -51,7 +84,8 @@ class ivs:
 				"cur_com_num": self.cur_com_num,
 				"last_cid": self.last_cid,
 				"cur_com_level": self.cur_com_level,
-				"cur_branch": self.cur_branch
+				"cur_branch": self.cur_branch,
+				"cur_patch_num": self.cur_patch_num
 				}
 			)
 		else:
@@ -65,34 +99,12 @@ class ivs:
 						"cur_com_num": self.cur_com_num,
 						"last_cid": self.last_cid,
 						"cur_com_level": self.cur_com_level,
-						"cur_branch": self.cur_branch
+						"cur_branch": self.cur_branch,
+						"cur_patch_num": self.cur_patch_num
 					}
 					
 				}
 			)
-
-	def get_next_com_num(self):
-		self.cur_com_num += 1
-		return self.cur_com_num
-	
-	def get_next_com_level(self):
-		self.cur_com_level += 1
-		return self.cur_com_level
-
-	def inc_com_level(self):
-		self.cur_com_level += 1
-
-	def inc_com_num(self):
-		self.cur_com_num += 1
-
-	def dec_com_level(self):
-		self.cur_com_level -= 1
-
-	def dec_com_num(self):
-		self.cur_com_num -= 1
-
-	def set_cur_com_level(self, num):
-		self.cur_com_level = num
 
 	def load_params(self):
 		self.set_conn(Connection())
@@ -106,7 +118,7 @@ class ivs:
 		self.branches = self.db.branches
 
 		param = self.params.find_one({"path": self.path})
-		if(param == None):
+		if(param == None or len(param) == 0):
 			pass
 		else:
 			self.dbname = param["dbname"]
@@ -115,6 +127,7 @@ class ivs:
 			self.last_cid = param["last_cid"]
 			self.cur_com_level = param["cur_com_level"]
 			self.cur_branch = param["cur_branch"]
+			self.cur_patch_num = param["cur_patch_num"]
 		
 		self.dmp = dmp_module.diff_match_patch()
 		self.patch_obj = dmp_module.patch_obj()
@@ -132,14 +145,14 @@ class ivs:
 		self.cur_branch = branch
 
 	def init(self):
-		print "Loading parameters ..."
-		self.load_params()
 		
-
-                repo_dir=os.path.join(self.path,".ivs")
+		repo_dir=os.path.join(self.path,".ivs")
 
 		if not os.path.exists(os.path.join(self.path, '.ivs')):
 			os.makedirs(os.path.join(self.path, '.ivs'))
+
+			print "Loading parameters ..."
+			self.load_params()
 
 			self.branches.insert({
 				"name": "master",
@@ -177,14 +190,16 @@ class ivs:
 			self.cur_com_num = 1
 			self.last_cid = tmp_id
 			self.cur_com_level = 1
+			self.cur_patch_num = 0
 		else:
 			self.delete()
 			self.init()
+
 		self.save_params()
 
-                db_name_file=open(os.path.join(repo_dir,"db_name"),'w')
-                db_name_file.write(self.dbname+"\n")
-                db_name_file.close()
+		db_name_file=open(os.path.join(repo_dir,"db_name"),'w')
+		db_name_file.write(self.dbname+"\n")
+		db_name_file.close()
 
 	def is_all_committed(self):
 		entries = self.files.find({"is_present": True})
@@ -250,14 +265,20 @@ class ivs:
 
 	def add(self, path):
 		self.load_params()
+
 		if path == "-a":
 			for root, dirs, files in os.walk(self.path):
+				dirs[:] = [d for d in dirs if d not in ".ivs"]
+
 				for f in files:
-					entry = self.files.find({"path": os.path.join(root, f)})
-					if(entry.count() == 0):
+					if not self.istext(os.path.join(root, f)):
+						print str(os.path.relpath(os.path.join(root, f), self.path)) + " : File type not supported. Aborting"
+						continue
+					entry = self.files.find_one({"path": os.path.join(root, f)})
+					if(entry == None or len(entry) == 0):
 						self.files.insert({
 								"name": f, 
-								"path": os.path.relpath(os.path.join(root, f), self.path), 
+								"path": str(os.path.relpath(os.path.join(root, f), self.path)), 
 								"staged": True, 
 								"staged_ts": os.path.getmtime(os.path.join(root, f)),
 								"patch_ids": [],
@@ -279,13 +300,19 @@ class ivs:
 								}
 							}
 						)
+		elif not os.path.isfile(os.path.join(self.path, str(path))):
+			print "Improper path. Aborting"
+			return	
 		else:
 			entry = self.files.find_one({"path": path})
 			if(entry == None or len(entry) == 0):
-				print "add insert"
+				if not self.istext(os.path.join(root, entry["path"])):
+					print str(entry["path"]) + " : File type not supported. Aborting"
+					return
+				print "Staging new file: " + str(path)
 				self.files.insert({
 						"name": os.path.basename(path), 
-						"path": path, 
+						"path": str(path), 
 						"staged": True, 
 						"staged_ts": os.path.getmtime(os.path.join(self.path, path)),
 						"patch_ids": [],
@@ -296,7 +323,7 @@ class ivs:
 				)
 			else:
 				if self.is_diff(entry):
-					print "add update"
+					print "Staging modified file: " + str(path)
 					self.files.update({
 							"path": path
 						},
@@ -330,11 +357,12 @@ class ivs:
 	def commit(self, msg):
 		self.load_params()
 		entries = self.files.find({"staged": True, "is_present": True})
+		# print entries.count()
 		if(entries.count() == 0):
 			print "Nothing to commit. Aborting"
 			return
 		else:
-			"print Commit initiated"
+			print "Commit initiated"
 		tmp_id = ObjectId()
 		commit_id = self.commits.insert({
 			"uid":  tmp_id,
@@ -354,11 +382,13 @@ class ivs:
 			if entry["to_remove"] :
 				print "Removing file " + str(entry["path"])
 				self.files.update({
-						"path": entry["path"]
+						"path": str(entry["path"])
 					},
 					{ 
 						'$set': {
-							"is_present": False
+							"staged": False,
+							"is_present": False,
+							"to_remove": False
 						} 
 					} 
 				)
@@ -383,13 +413,13 @@ class ivs:
 						pid = ObjectId()
 						self.patches.insert({
 							"uid": pid,
-							"dict": patch.patch_dict
+							"dict": patch.patch_dict,
+							"num": self.get_next_patch_num()
 							}
 						)
 
 						self.files.update({
-								"staged": True,
-								"path": entry["path"],
+								"path": entry["path"]
 							},
 							{ 
 								'$set': {
@@ -418,11 +448,23 @@ class ivs:
 						)
 
 			elif entry["to_add"]:
+				print "Adding file " + str(entry["path"])
+				self.files.update({
+						"path": str(entry["path"])
+					},
+					{ 
+						'$set': {
+							"staged": False,
+							"to_add": False
+						} 
+					} 
+				)
+				# print self.files.find_one({"path": entry["path"]})["staged"]
 				(tmp_txt, data) = self.get_diff(entry)
 				# print type(tmp_txt) 
 				patches = self.dmp.patch_make(tmp_txt, data.decode('utf-8'))
 				if(len(patches) > 0):
-					print "committing changes to " + str(entry["path"])
+					print "Committing : " + str(entry["path"])
 					
 					self.commits.update({
 						"uid": self.last_cid
@@ -439,12 +481,12 @@ class ivs:
 						pid = ObjectId()
 						self.patches.insert({
 							"uid": pid,
-							"dict": patch.patch_dict
+							"dict": patch.patch_dict,
+							"num": self.get_next_patch_num()
 							}
 						)
 						
 						self.files.update({
-								"staged": True,
 								"path": entry["path"],
 								"is_present": True
 							},
@@ -471,6 +513,17 @@ class ivs:
 								
 							}
 						)
+			else:
+				print entry["path"]
+				self.files.update({
+						"path": entry["path"]
+					},
+					{ 
+						'$set': {
+							"staged": False
+						} 
+					} 
+				)
 		self.save_params()
 
 	def rollback(self, commit_id):
@@ -500,7 +553,7 @@ class ivs:
 		return past != cur.decode('utf-8')
 
 	def get_diff(self, entry):
-		tmp_txt = ""
+		recover_text = ""
 		patch_ids = entry["patch_ids"]
 		# print patch_ids
 		patch_obj_arr = []
@@ -523,13 +576,11 @@ class ivs:
 					patch_obj.fill_dict(patch_dict)
 					patch_obj_arr.append(patch_obj)			
 
-				tmp_txt = self.dmp.patch_apply(patch_obj_arr, "")[0]
+				recover_text = self.dmp.patch_apply(patch_obj_arr, "")[0]
 		with open (os.path.join(self.path, entry["path"]), "r") as myfile:
-			data=myfile.read()
-		# print "data: " + data
-		# print "text: " + tmp_txt
-		# print type(data) 
-		return (tmp_txt, data)
+			present_data = myfile.read()
+
+		return (recover_text, present_data)
 
 	def status(self):
 		self.load_params()
@@ -550,16 +601,7 @@ class ivs:
 					print "deleted + staged: \t" + entry["path"]
 				else:
 					print "deleted + unstaged: \t" + entry["path"]
-				# self.files.update({
-				# 		"path": entry["path"]
-				# 	},
-				# 	{ 
-				# 		'$set': {
-				# 			"is_present": False, 
-				# 			"staged": False
-				# 		} 
-				# 	} 
-				# )
+
 			elif self.is_diff(entry):
 				if(entry["staged"]):
 					print "modified + staged: \t" + entry["path"]
@@ -577,7 +619,7 @@ class ivs:
 		self.db.drop_collection('files')
 		self.db.drop_collection('commits')
 		self.db.drop_collection('staged')
-		self.conn.drop_database('test_database')
+		self.conn.drop_database(self.dbname)
 
 		shutil.rmtree(os.path.join(self.path, '.ivs'))
 
@@ -587,22 +629,42 @@ class ivs:
 		for e in entry:
 			print e
 
-#if __name__ == "__main__":
+	def istext(self, filename):
+	    s=open(filename).read(512)
+	    text_characters = "".join(map(chr, range(32, 127)) + list("\n\r\t\b"))
+	    _null_trans = string.maketrans("", "")
+	    if not s:
+	        # Empty files are considered text
+	        return True
+	    if "\0" in s:
+	        # Files with null bytes are likely binary
+	        return False
+	    # Get the non-text characters (maps a character to itself then
+	    # use the 'remove' option to get rid of the text characters.)
+	    t = s.translate(_null_trans, text_characters)
+	    # If more than 30% non-text characters, then
+	    # this is considered a binary file
+	    if float(len(t))/float(len(s)) > 0.30:
+	        return False
+	    return True
 
-        #repo = ivs()
+if __name__ == "__main__":
 
-        #repo.set_path("/media/data/Desktop/6th_sem_labs/database_lab/ivs/test")
-        #repo.set_dbname("shubham")
+        repo = ivs()
 
-        #repo.init()
+        repo.set_path("/home/kunal15595/Documents/theory")
+        repo.set_dbname("kunal")
+
+        # repo.init()
         # repo.create_branch('kunal')
         # repo.checkout('kunal')
-        #repo.add("a.txt")
+        # repo.add("-a")
+        # repo.add("networks/tanenbaum/a.txt")
         # repo.remove("networks/tanenbaum/a.txt")
 
         # repo.status()
-        #repo.commit("yo")
-        #repo.log()
+        repo.commit("yo")
+        repo.log()
         # repo.show(repo.files, "files")
         #repo.show(repo.commits, "commits")
         # repo.show(repo.staged, "staged")
