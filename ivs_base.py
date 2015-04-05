@@ -206,7 +206,10 @@ class ivs:
 
 	def is_all_committed(self):
 		entries = self.files.find({"is_present": True})
+
 		for entry in entries:
+			if not os.path.exists(os.path.join(self.path, entry["path"])):
+				return False
 			if self.is_diff(entry):
 				return False
 		return True
@@ -328,9 +331,7 @@ class ivs:
 		else:
 			entry = self.files.find_one({"path": path})
 			if(entry == None or len(entry) == 0):
-				if not self.istext(os.path.join(root, entry["path"])):
-					print str(entry["path"]) + " : File type not supported. Aborting"
-					return
+				
 				print "Staging new file: " + str(path)
 				self.files.insert({
 						"name": os.path.basename(path), 
@@ -346,6 +347,9 @@ class ivs:
 					}
 				)
 			else:
+				if not self.istext(os.path.join(self.path, entry["path"])):
+					print str(entry["path"]) + " : File type not supported. Aborting"
+					return
 				if self.is_diff(entry):
 					print "Staging modified file: " + str(path)
 					self.files.update({
@@ -491,7 +495,6 @@ class ivs:
 				patches = self.dmp.patch_make(tmp_txt, data.decode('utf-8'))
 				if(len(patches) > 0):
 					print "Committing : " + str(entry["path"])
-					print cid, self.last_cid
 					self.commits.update({
 						"uid": self.last_cid
 						},{
@@ -526,7 +529,6 @@ class ivs:
 								}
 							} 
 						)
-						print "adding patch " + str(pid) + "to commit " + str(cid)
 						self.commits.update({
 								"uid": cid
 							},
@@ -617,6 +619,8 @@ class ivs:
 	def rollback(self, cid):
 		self.load_params()
 		path = self.path_to_commit(cid)
+		# for p in path:
+		# 	print p
 		if len(path) == 0:
 			print "Improper cid. Aborting"
 			return
@@ -651,7 +655,7 @@ class ivs:
 
 					file_path = mongo_patch["file_path"]
 				recover_text = self.dmp.patch_apply(patch_obj_arr, "")[0]
-
+				print "recover text: " + recover_text
 				fp = open(self.get_full_path(file_path),'w')
 				fp.write(recover_text)
 				fp.close()
@@ -704,8 +708,12 @@ class ivs:
 					patch_obj_arr.append(patch_obj)			
 
 				recover_text = self.dmp.patch_apply(patch_obj_arr, "")[0]
-		with open (os.path.join(self.path, entry["path"]), "r") as myfile:
-			present_data = myfile.read()
+
+		if not os.path.exists(os.path.join(self.path, entry["path"])):
+			present_data = ""
+		else:
+			with open (os.path.join(self.path, entry["path"]), "r") as myfile:
+				present_data = myfile.read()
 
 		return (recover_text, present_data)
 
@@ -713,7 +721,10 @@ class ivs:
 		self.load_params()
 		print "untracked: \t"
 		for root, dirs, files in os.walk(self.path):
+			dirs[:] = [d for d in dirs if d not in ".ivs"]
 			for f in files:
+				if not self.istext(os.path.join(root, f)):
+					continue
 				entry = self.files.find_one({
 					"path": os.path.relpath(os.path.join(root, f), self.path)
 				})
@@ -782,14 +793,14 @@ if __name__ == "__main__":
         repo.set_path("/home/kunal15595/Documents/theory")
         repo.set_dbname("kunal")
 
-        # repo.init()
+        repo.init()
         # repo.create_branch('kunal')
         # repo.checkout('kunal')
         repo.add("-a")
-        # repo.add("networks/tanenbaum/a.txt")
-        # repo.remove("networks/tanenbaum/a.txt")
+        repo.add("networks/tanenbaum/a.txt")
+        repo.remove("networks/forouzan/ch01.txt")
 
-        # repo.status()
+        repo.status()
         repo.commit("yo")
         repo.log()
         # repo.show(repo.files, "files")
