@@ -1,0 +1,156 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.9~svn20110310	//
+BLANKLINEEND	diff_match_patch.py	/^  BLANKLINEEND = re.compile(r"\\n\\r?\\n$");$/;"	v	class:diff_match_patch
+BLANKLINESTART	diff_match_patch.py	/^  BLANKLINESTART = re.compile(r"^\\r?\\n\\r?\\n");$/;"	v	class:diff_match_patch
+DIFF_DELETE	diff_match_patch.py	/^  DIFF_DELETE = -1$/;"	v	class:diff_match_patch
+DIFF_EQUAL	diff_match_patch.py	/^  DIFF_EQUAL = 0$/;"	v	class:diff_match_patch
+DIFF_INSERT	diff_match_patch.py	/^  DIFF_INSERT = 1$/;"	v	class:diff_match_patch
+PooledProcessMixIn	PooledProcessMixIn.py	/^class PooledProcessMixIn:$/;"	c
+__author__	PooledProcessMixIn.py	/^__author__ = 'Muayyad Saleh Alsadi'$/;"	v
+__author__	diff_match_patch.py	/^__author__ = 'fraser@google.com (Neil Fraser)'$/;"	v
+__init__	diff_match_patch.py	/^  def __init__(self):$/;"	m	class:diff_match_patch
+__init__	diff_match_patch.py	/^  def __init__(self):$/;"	m	class:patch_obj
+__init__	http_server.py	/^    def __init__(self):$/;"	m	class:http_server
+__init__	mongodb.py	/^	def __init__(self):$/;"	m	class:ivs
+__init__	ref/mongodb.py	/^	def __init__(self):$/;"	m	class:ivs
+__license__	PooledProcessMixIn.py	/^__license__ = 'PSFL'$/;"	v
+__str__	diff_match_patch.py	/^  def __str__(self):$/;"	m	class:patch_obj	file:
+__version__	PooledProcessMixIn.py	/^__version__ = '0.0.2'$/;"	v
+_handle_request_noblock	PooledProcessMixIn.py	/^    def _handle_request_noblock(self):$/;"	m	class:PooledProcessMixIn
+_init_pool	PooledProcessMixIn.py	/^    def _init_pool(self):$/;"	m	class:PooledProcessMixIn
+_maintain_pool	PooledProcessMixIn.py	/^    def _maintain_pool(self):$/;"	m	class:PooledProcessMixIn
+_process_loop	PooledProcessMixIn.py	/^    def _process_loop(self):$/;"	m	class:PooledProcessMixIn
+_real_handle_request_noblock	PooledProcessMixIn.py	/^    def _real_handle_request_noblock(self):$/;"	m	class:PooledProcessMixIn
+_thread_loop	PooledProcessMixIn.py	/^    def _thread_loop(self):$/;"	m	class:PooledProcessMixIn
+add	mongodb.py	/^	def add(self, path):$/;"	m	class:ivs
+add	ref/mongodb.py	/^	def add(self, path):$/;"	m	class:ivs
+checkout	mongodb.py	/^	def checkout(branch):$/;"	m	class:ivs
+commit	mongodb.py	/^	def commit(self, msg):$/;"	m	class:ivs
+commit	ref/mongodb.py	/^	def commit(self, msg):$/;"	m	class:ivs
+create_branch	mongodb.py	/^	def create_branch(branch):$/;"	m	class:ivs
+db_name	ivs	/^        db_name=arg_list[1]$/;"	v
+db_name	ivs	/^db_name=""$/;"	v
+delete	mongodb.py	/^	def delete(self):$/;"	m	class:ivs
+delete	ref/mongodb.py	/^	def delete(self):$/;"	m	class:ivs
+diff_bisect	diff_match_patch.py	/^  def diff_bisect(self, text1, text2, deadline):$/;"	m	class:diff_match_patch
+diff_bisectSplit	diff_match_patch.py	/^  def diff_bisectSplit(self, text1, text2, x, y, deadline):$/;"	m	class:diff_match_patch
+diff_charsToLines	diff_match_patch.py	/^  def diff_charsToLines(self, diffs, lineArray):$/;"	m	class:diff_match_patch
+diff_cleanupEfficiency	diff_match_patch.py	/^  def diff_cleanupEfficiency(self, diffs):$/;"	m	class:diff_match_patch
+diff_cleanupMerge	diff_match_patch.py	/^  def diff_cleanupMerge(self, diffs):$/;"	m	class:diff_match_patch
+diff_cleanupSemantic	diff_match_patch.py	/^  def diff_cleanupSemantic(self, diffs):$/;"	m	class:diff_match_patch
+diff_cleanupSemanticLossless	diff_match_patch.py	/^  def diff_cleanupSemanticLossless(self, diffs):$/;"	m	class:diff_match_patch
+diff_cleanupSemanticScore	diff_match_patch.py	/^    def diff_cleanupSemanticScore(one, two):$/;"	f	function:diff_match_patch.diff_cleanupSemanticLossless
+diff_commonOverlap	diff_match_patch.py	/^  def diff_commonOverlap(self, text1, text2):$/;"	m	class:diff_match_patch
+diff_commonPrefix	diff_match_patch.py	/^  def diff_commonPrefix(self, text1, text2):$/;"	m	class:diff_match_patch
+diff_commonSuffix	diff_match_patch.py	/^  def diff_commonSuffix(self, text1, text2):$/;"	m	class:diff_match_patch
+diff_compute	diff_match_patch.py	/^  def diff_compute(self, text1, text2, checklines, deadline):$/;"	m	class:diff_match_patch
+diff_fromDelta	diff_match_patch.py	/^  def diff_fromDelta(self, text1, delta):$/;"	m	class:diff_match_patch
+diff_halfMatch	diff_match_patch.py	/^  def diff_halfMatch(self, text1, text2):$/;"	m	class:diff_match_patch
+diff_halfMatchI	diff_match_patch.py	/^    def diff_halfMatchI(longtext, shorttext, i):$/;"	f	function:diff_match_patch.diff_halfMatch
+diff_levenshtein	diff_match_patch.py	/^  def diff_levenshtein(self, diffs):$/;"	m	class:diff_match_patch
+diff_lineMode	diff_match_patch.py	/^  def diff_lineMode(self, text1, text2, deadline):$/;"	m	class:diff_match_patch
+diff_linesToChars	diff_match_patch.py	/^  def diff_linesToChars(self, text1, text2):$/;"	m	class:diff_match_patch
+diff_linesToCharsMunge	diff_match_patch.py	/^    def diff_linesToCharsMunge(text):$/;"	f	function:diff_match_patch.diff_linesToChars
+diff_main	diff_match_patch.py	/^  def diff_main(self, text1, text2, checklines=True, deadline=None):$/;"	m	class:diff_match_patch
+diff_match_patch	diff_match_patch.py	/^class diff_match_patch:$/;"	c
+diff_prettyHtml	diff_match_patch.py	/^  def diff_prettyHtml(self, diffs):$/;"	m	class:diff_match_patch
+diff_text1	diff_match_patch.py	/^  def diff_text1(self, diffs):$/;"	m	class:diff_match_patch
+diff_text2	diff_match_patch.py	/^  def diff_text2(self, diffs):$/;"	m	class:diff_match_patch
+diff_toDelta	diff_match_patch.py	/^  def diff_toDelta(self, diffs):$/;"	m	class:diff_match_patch
+diff_xIndex	diff_match_patch.py	/^  def diff_xIndex(self, diffs, loc):$/;"	m	class:diff_match_patch
+do_POST	request_handler.py	/^    def do_POST(self):$/;"	m	class:request_handler
+fill_dict	diff_match_patch.py	/^  def fill_dict(self,patch_dict):$/;"	m	class:patch_obj
+get_auth	ivs	/^def get_auth():$/;"	f
+get_conn	mongodb.py	/^	def get_conn(self):$/;"	m	class:ivs
+get_conn	ref/mongodb.py	/^	def get_conn(self):$/;"	m	class:ivs
+get_cur_branch	mongodb.py	/^	def get_cur_branch(self):$/;"	m	class:ivs
+get_db	mongodb.py	/^	def get_db(self):$/;"	m	class:ivs
+get_db	ref/mongodb.py	/^	def get_db(self):$/;"	m	class:ivs
+get_db_name	ivs	/^def get_db_name():$/;"	f
+get_dbname	mongodb.py	/^	def get_dbname(self):$/;"	m	class:ivs
+get_dbname	ref/mongodb.py	/^	def get_dbname(self):$/;"	m	class:ivs
+get_diff	mongodb.py	/^	def get_diff(self, entry):$/;"	m	class:ivs
+get_diff	ref/mongodb.py	/^	def get_diff(self, entry):$/;"	m	class:ivs
+get_last_cid	mongodb.py	/^	def get_last_cid(self):$/;"	m	class:ivs
+get_next_com_level	mongodb.py	/^	def get_next_com_level(self):$/;"	m	class:ivs
+get_next_com_num	mongodb.py	/^	def get_next_com_num(self):$/;"	m	class:ivs
+get_path	mongodb.py	/^	def get_path(self):$/;"	m	class:ivs
+get_path	ref/mongodb.py	/^	def get_path(self):$/;"	m	class:ivs
+get_pull_data	ivs	/^def get_pull_data():$/;"	f
+get_push_data	ivs	/^def get_push_data():$/;"	f
+get_repo_root	ivs	/^def get_repo_root():$/;"	f
+http_server	http_server.py	/^class http_server(PooledProcessMixIn,HTTPServer):$/;"	c
+inc_com_level	mongodb.py	/^	def inc_com_level(self):$/;"	m	class:ivs
+inc_com_num	mongodb.py	/^	def inc_com_num(self):$/;"	m	class:ivs
+init	mongodb.py	/^	def init(self):$/;"	m	class:ivs
+init	ref/mongodb.py	/^	def init(self):$/;"	m	class:ivs
+init	server_settings.py	/^def init():$/;"	f
+is_all_committed	mongodb.py	/^	def is_all_committed(self):$/;"	m	class:ivs
+is_diff	mongodb.py	/^	def is_diff(self, entry):$/;"	m	class:ivs
+is_diff	ref/mongodb.py	/^	def is_diff(self, entry):$/;"	m	class:ivs
+ivs	mongodb.py	/^class ivs:$/;"	c
+ivs	ref/mongodb.py	/^class ivs:$/;"	c
+load_params	mongodb.py	/^	def load_params(self, dbname):$/;"	m	class:ivs
+load_params	ref/mongodb.py	/^	def load_params(self, dbname):$/;"	m	class:ivs
+log	mongodb.py	/^	def log(self):$/;"	m	class:ivs
+log	ref/mongodb.py	/^	def log(self):$/;"	m	class:ivs
+match_alphabet	diff_match_patch.py	/^  def match_alphabet(self, pattern):$/;"	m	class:diff_match_patch
+match_bitap	diff_match_patch.py	/^  def match_bitap(self, text, pattern, loc):$/;"	m	class:diff_match_patch
+match_bitapScore	diff_match_patch.py	/^    def match_bitapScore(e, x):$/;"	f	function:diff_match_patch.match_bitap
+match_main	diff_match_patch.py	/^  def match_main(self, text, pattern, loc):$/;"	m	class:diff_match_patch
+passwd	ivs	/^passwd=""$/;"	v
+patch_addContext	diff_match_patch.py	/^  def patch_addContext(self, patch, text):$/;"	m	class:diff_match_patch
+patch_addPadding	diff_match_patch.py	/^  def patch_addPadding(self, patches):$/;"	m	class:diff_match_patch
+patch_apply	diff_match_patch.py	/^  def patch_apply(self, patches, text):$/;"	m	class:diff_match_patch
+patch_deepCopy	diff_match_patch.py	/^  def patch_deepCopy(self, patches):$/;"	m	class:diff_match_patch
+patch_fromText	diff_match_patch.py	/^  def patch_fromText(self, textline):$/;"	m	class:diff_match_patch
+patch_make	diff_match_patch.py	/^  def patch_make(self, a, b=None, c=None):$/;"	m	class:diff_match_patch
+patch_obj	diff_match_patch.py	/^class patch_obj:$/;"	c
+patch_splitMax	diff_match_patch.py	/^  def patch_splitMax(self, patches):$/;"	m	class:diff_match_patch
+patch_toText	diff_match_patch.py	/^  def patch_toText(self, patches):$/;"	m	class:diff_match_patch
+pool_shutdown	PooledProcessMixIn.py	/^    def pool_shutdown(self):$/;"	m	class:PooledProcessMixIn
+process	ivs	/^def process(repo,action,get_data_func,process_data_func):$/;"	f
+pull_process	ivs	/^def pull_process(data):$/;"	f
+push_delta_process	ivs	/^def push_delta_process():$/;"	f
+push_process	ivs	/^def push_process(data):$/;"	f
+remove	mongodb.py	/^	def remove(self, path):$/;"	m	class:ivs
+repo	ivs	/^repo=ivs()$/;"	v
+repo	ref/mongodb.py	/^	repo = ivs()$/;"	v	class:ivs
+repo_add	ivs	/^def repo_add():$/;"	f
+repo_commit	ivs	/^def repo_commit():$/;"	f
+repo_init	ivs	/^def repo_init():$/;"	f
+repo_root	ivs	/^        repo_root=os.getcwd()$/;"	v
+repo_root	ivs	/^repo_root=""$/;"	v
+request_handler	request_handler.py	/^class request_handler(BaseHTTPRequestHandler):$/;"	c
+restore_branch_data	mongodb.py	/^	def restore_branch_data(branch):$/;"	m	class:ivs
+rollback	mongodb.py	/^	def rollback(self, commit_id):$/;"	m	class:ivs
+rollback	ref/mongodb.py	/^	def rollback(self, commit_id):$/;"	m	class:ivs
+save_params	mongodb.py	/^	def save_params(self):$/;"	m	class:ivs
+server	server.py	/^    server=http_server()$/;"	v
+set_conn	mongodb.py	/^	def set_conn(self, conn):$/;"	m	class:ivs
+set_conn	ref/mongodb.py	/^	def set_conn(self, conn):$/;"	m	class:ivs
+set_cur_branch	mongodb.py	/^	def set_cur_branch(self, branch):$/;"	m	class:ivs
+set_cur_com_level	mongodb.py	/^	def set_cur_com_level(num):$/;"	m	class:ivs
+set_db	mongodb.py	/^	def set_db(self, db):$/;"	m	class:ivs
+set_db	ref/mongodb.py	/^	def set_db(self, db):$/;"	m	class:ivs
+set_dbname	mongodb.py	/^	def set_dbname(self, name):$/;"	m	class:ivs
+set_dbname	ref/mongodb.py	/^	def set_dbname(self, name):$/;"	m	class:ivs
+set_last_cid	mongodb.py	/^	def set_last_cid(self, cid):$/;"	m	class:ivs
+set_params	ref/mongodb.py	/^	def set_params(self):$/;"	m	class:ivs
+set_path	mongodb.py	/^	def set_path(self, path):$/;"	m	class:ivs
+set_path	ref/mongodb.py	/^	def set_path(self, path):$/;"	m	class:ivs
+set_repo_param	ivs	/^def set_repo_param():$/;"	f
+show	mongodb.py	/^	def show(self, col, name):$/;"	m	class:ivs
+show	ref/mongodb.py	/^	def show(self, col, name):$/;"	m	class:ivs
+shutdown	PooledProcessMixIn.py	/^    def shutdown(self):$/;"	m	class:PooledProcessMixIn
+status	mongodb.py	/^	def status(self):$/;"	m	class:ivs
+status	ref/mongodb.py	/^	def status(self):$/;"	m	class:ivs
+tree	mongodb.py	/^	def tree(self):$/;"	m	class:ivs
+update	mongodb.py	/^	def update(self):$/;"	m	class:ivs
+update	ref/mongodb.py	/^	def update(self):$/;"	m	class:ivs
+user_name	ivs	/^user_name=""$/;"	v
+valid_args	ivs	/^valid_args=["init","commit","status","add","push","pull"]$/;"	v

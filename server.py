@@ -16,12 +16,12 @@ if __name__=="__main__":
     try:
         optlist,args=getopt.getopt(sys.argv[1:],"hp:f:t:d:")
     except getopt.GetoptError:
-        print("usage python server.py [-p port_num] [-f num_forks] [-t num_threads_per_fork]")
+        print("wrong format use -h for help ")
         sys.exit(2)
 
     for opt,arg in optlist:
         if opt =="-h":
-            print("usage python server.py [-p port_num] [-f num_forks] [-t num_threads_per_fork]")
+            print("usage python server.py [-p port_num] [-f num_forks] [-t num_threads_per_fork] [-d service_dir] ")
             sys.exit(0)
         elif opt =="p":
             server_settings.port=arg

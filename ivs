@@ -1,0 +1,160 @@
+#!/usr/bin/python
+import httplib
+import sys
+import getopt
+from urlparse import urlparse
+import urllib
+import getpass
+from mongodb import ivs
+import os
+import os.path
+
+user_name=""
+passwd=""
+repo_root=""
+repo=None
+valid_args=["init","commit","status","add","push","pull","delete"]
+db_name=""
+
+def get_repo_root():
+    global repo_root
+    done=False
+    repo_root=""
+    cur_dir=os.getcwd()
+    while not done:
+        if os.path.exists(os.path.join(cur_dir,".ivs")):
+            repo_root=os.path.abspath(cur_dir)
+            done=True
+        else:
+            par_dir=os.path.join(cur_dir,os.pardir)
+            if os.path.abspath(par_dir) == os.path.abspath(cur_dir):
+                done=True
+            else:
+                cur_dir=par_dir
+
+    if repo_root == "":
+        print(os.getcwd()+" or any of its ancestor is a repo")
+        sys.exit(2)
+
+    print("Repo root "+repo_root)
+
+def set_repo_param():
+    repo=ivs(db_name)
+    repo.set_path(repo_root)
+    repo.set_dbname(db_name)
+
+def get_db_name():
+    global db_name
+    repo_dir=os.path.join(repo_root,".ivs")
+    db_name_file=open(os.path.join(repo_dir,"db_name"))
+    db_name=db_name_file.readline()
+
+def repo_add():
+    repo.add(arg_list[1])
+    repo.status()
+
+def repo_init():
+    repo.init()
+
+def repo_commit():
+    repo.commit(arg_list[1])
+
+def repo_status():
+    repo.status()
+
+def repo_delete():
+    repo.delete()
+
+def get_push_data():
+    print("hello")
+
+def get_pull_data():
+    print("hi")
+
+def push_delta_process():
+    process(arg_list[1],"push",get_push_data,push_process)
+
+def pull_process(data):
+    print(data)
+
+    
+def push_process(data):
+    print(data)
+
+
+
+def process(repo,action,get_data_func,process_data_func):
+    message=""
+    if get_data_func != None:
+        message=get_data_func()
+
+    remote_repo_location=urlparse(repo)
+    header={"Content-type": "application/x-www-form-urlencoded","Accept": "text/plain","user":user_name,"passwd":passwd}
+    param={"path":remote_repo_location.path,"action":action,"message":message}
+    body=urllib.urlencode(param)
+    conn=httplib.HTTPSConnection(remote_repo_location.netloc)
+    conn.request("POST","",body,header)
+    response=conn.getresponse()
+    print(response.status,response.reason)
+    data=response.read()
+    process_data_func(data)
+
+def get_auth():
+    global user_name
+    global passwd
+
+    user_name=raw_input("Enter username: ")
+    passwd=getpass.getpass()
+
+
+try:
+    optlist,arg_list=getopt.getopt(sys.argv[1:],"h")
+except getopt.GetoptError:
+    print("Wrong format type use -h for help")
+
+for opt,arg in optlist:
+    if opt=="-h":
+        print("Usage")
+        print("pull remote_repo")
+        print("push remote_repo")
+        print("valid args "+str(valid_args))
+        sys.exit(0)
+
+
+if arg_list[0] in valid_args:
+    if arg_list[0] not in ["status","delete"]:
+        if len(arg_list) !=2:
+            print("wrong no of args use -h for help")
+            sys.exit(2)
+    else:
+        if len(arg_list) !=1:
+            print("wrong no of args use -h for help")
+            sys.exit(2)
+
+    if arg_list[0] == "init":
+        repo_root=os.getcwd()
+        db_name=arg_list[1]
+        set_repo_param()
+        repo_init()
+
+    else:
+        get_repo_root()
+        get_db_name()
+        set_repo_param()
+
+        if arg_list[0] in ["pull","push"]:
+            get_auth()
+        else:
+            if arg_list[0] == "add":
+                repo_add()
+            elif arg_list[0] == "commit":
+                repo_commit()
+            elif arg_list[0] == "status":
+                repo_status()
+            elif arg_list[0] == "delete":
+                repo_delete()
+
+else:
+    print("Wrong argument use -h for help")
+    sys.exit(2)
+
