@@ -16,7 +16,7 @@ user_name=""
 passwd=""
 repo_root=""
 repo=ivs()
-valid_args=["init","commit","status","add","push","pull","delete","bare_init"]
+valid_args=["init","commit","status","add","push","pull","delete","bare_init","clone"]
 db_name=""
 mongo_client=None
 db=None
@@ -62,6 +62,11 @@ def repo_init():
 
 def repo_bare_init():
     repo.init(True)
+
+def repo_clone():
+    get_auth()
+    repo_bare_init()
+    process(arg_list[2],"pull",get_pull_data,process_pull_data)
 
 def repo_commit():
     repo.commit(arg_list[1])
@@ -153,16 +158,20 @@ for opt,arg in optlist:
 
 
 if arg_list[0] in valid_args:
-    if arg_list[0] not in ["status","delete"]:
-        if len(arg_list) !=2:
-            print("wrong no of args use -h for help")
-            sys.exit(2)
-    else:
+    if arg_list[0] in ["status","delete"]:
         if len(arg_list) !=1:
             print("wrong no of args use -h for help")
             sys.exit(2)
+    elif arg_list[0] in ["clone"]:
+        if len(arg_list) !=3:
+            print("wrong no of args use -h for help")
+            sys.exit(2)
+    else:
+        if len(arg_list) !=2:
+            print("wrong no of args use -h for help")
+            sys.exit(2)
 
-    if arg_list[0] == "init" or arg_list[0] == "bare_init":
+    if arg_list[0] in ["init","bare_init","clone"]:
         repo_root=os.getcwd()
         db_name=arg_list[1]
         set_repo_param()
@@ -171,6 +180,8 @@ if arg_list[0] in valid_args:
             repo_init()
         elif arg_list[0] == "bare_init":
             repo_bare_init()
+        elif arg_list[0] == "clone":
+            repo_clone()
 
     else:
         get_repo_root()

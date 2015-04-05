@@ -93,7 +93,7 @@ http_server	http_server.py	/^class http_server(PooledProcessMixIn,HTTPServer):$/
 inc_com_level	ivs_base.py	/^	def inc_com_level(self):$/;"	m	class:ivs
 inc_com_num	ivs_base.py	/^	def inc_com_num(self):$/;"	m	class:ivs
 inc_patch_num	ivs_base.py	/^	def inc_patch_num(self):$/;"	m	class:ivs
-init	ivs_base.py	/^	def init(self):$/;"	m	class:ivs
+init	ivs_base.py	/^	def init(self,server=False):$/;"	m	class:ivs
 init	ref/mongodb.py	/^	def init(self):$/;"	m	class:ivs
 init	server_settings.py	/^def init():$/;"	f
 is_all_committed	ivs_base.py	/^	def is_all_committed(self):$/;"	m	class:ivs
@@ -130,6 +130,8 @@ remove	ivs_base.py	/^	def remove(self, path):$/;"	m	class:ivs
 repo	ivs	/^repo=ivs()$/;"	v
 repo	ref/mongodb.py	/^	repo = ivs()$/;"	v	class:ivs
 repo_add	ivs	/^def repo_add():$/;"	f
+repo_bare_init	ivs	/^def repo_bare_init():$/;"	f
+repo_clone	ivs	/^def repo_clone():$/;"	f
 repo_commit	ivs	/^def repo_commit():$/;"	f
 repo_delete	ivs	/^def repo_delete():$/;"	f
 repo_init	ivs	/^def repo_init():$/;"	f
@@ -164,4 +166,4 @@ tree	ivs_base.py	/^	def tree(self):$/;"	m	class:ivs
 update	ivs_base.py	/^	def update(self):$/;"	m	class:ivs
 update	ref/mongodb.py	/^	def update(self):$/;"	m	class:ivs
 user_name	ivs	/^user_name=""$/;"	v
-valid_args	ivs	/^valid_args=["init","commit","status","add","push","pull","delete"]$/;"	v
+valid_args	ivs	/^valid_args=["init","commit","status","add","push","pull","delete","bare_init","clone"]$/;"	v
