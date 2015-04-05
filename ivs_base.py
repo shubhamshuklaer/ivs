@@ -656,29 +656,36 @@ class ivs:
 				open(self.get_full_path(f), 'w').close()
 			for f in commit["deleted"]:
 				files_to_delete.update({f})
-			for patch_id in commit["patch_ids"]:
-				patch_obj_arr = []
-				file_path = None
-				for mongo_patch in self.patches.find({"uid": patch_id}):
+			if len(commit["patch_ids"])==0:
+				continue
+			
+			mongo_patch_cur=self.patches.find({"uid": { "$in": commit["patch_ids"]}})
 
-					patch_dict=dict()
-					# print(mongo_patch)
-					patch_dict["diffs"]=mongo_patch["dict"]["diffs"]
-					patch_dict["start1"]=int(mongo_patch["dict"]["start1"])
-					patch_dict["start2"]=int(mongo_patch["dict"]["start2"])
-					patch_dict["length1"]=int(mongo_patch["dict"]["length1"])
-					patch_dict["length2"]=int(mongo_patch["dict"]["length2"])
+			patch_obj_arr = []
+			file_path = None
+			print("ss"+str(commit))
+			for mongo_patch in mongo_patch_cur:
 
-					patch_obj=dmp_module.patch_obj()
-					patch_obj.fill_dict(patch_dict)
-					patch_obj_arr.append(patch_obj)	
+				patch_dict=dict()
+				# print(mongo_patch)
+				patch_dict["diffs"]=mongo_patch["dict"]["diffs"]
+				patch_dict["start1"]=int(mongo_patch["dict"]["start1"])
+				patch_dict["start2"]=int(mongo_patch["dict"]["start2"])
+				patch_dict["length1"]=int(mongo_patch["dict"]["length1"])
+				patch_dict["length2"]=int(mongo_patch["dict"]["length2"])
 
-					file_path = mongo_patch["file_path"]
-				recover_text = self.dmp.patch_apply(patch_obj_arr, "")[0]
-				print "recover text: " + recover_text
-				fp = open(self.get_full_path(file_path),'w')
-				fp.write(recover_text)
-				fp.close()
+				patch_obj=dmp_module.patch_obj()
+				patch_obj.fill_dict(patch_dict)
+				patch_obj_arr.append(patch_obj)	
+
+				file_path = mongo_patch["file_path"]
+
+			recover_text = self.dmp.patch_apply(patch_obj_arr, "")[0]
+			print "recover text: " + recover_text
+			fp = open(self.get_full_path(file_path),'w')
+			fp.write(recover_text)
+			fp.close()
+
 		for file_path in files_to_delete:
 			os.unlink(os.path.join(self.path, file_path))
 		self.last_cid = cid
@@ -688,7 +695,7 @@ class ivs:
 	def delete_tree(self, cid):
 		child_ids = self.commits.find_one({"uid": cid})["child_ids"]
 		for child_id in child_ids:
-			delete_tree(child_id)
+			self.delete_tree(child_id)
 
 	def tree(self):
 		print "tree"

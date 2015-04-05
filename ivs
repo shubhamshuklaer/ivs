@@ -185,17 +185,14 @@ for opt,arg in optlist:
 
 if arg_list[0] in valid_args:
     if arg_list[0] in one_arg_args:
-        print("h")
         if len(arg_list) !=1:
             print("wrong no of args use -h for help")
             sys.exit(2)
     elif arg_list[0] in three_arg_args:
-        print("j")
         if len(arg_list) !=3:
             print("wrong no of args use -h for help")
             sys.exit(2)
     else:
-        print("k")
         if len(arg_list) !=2:
             print("wrong no of args use -h for help")
             sys.exit(2)
