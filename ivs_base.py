@@ -116,6 +116,7 @@ class ivs:
 		self.params = self.db.params
 		self.patches = self.db.patches
 		self.branches = self.db.branches
+		self.ivs = self.db.ivs
 
 		param = self.params.find_one({"path": self.path})
 		if(param == None or len(param) == 0):
@@ -189,6 +190,12 @@ class ivs:
 			self.last_cid = tmp_id
 			self.cur_com_level = 1
 			self.cur_patch_num = 0
+			
+			client = MongoClient()
+			dbs = client['ivs']   # the database to store the connections
+			dbs.ivs.insert( {'repo': self.dbname } )   # separte entry for each repo
+		
+		#	self.ivs.insert( { 'repo': self.dbname } )
 
 		else:
 			self.delete()

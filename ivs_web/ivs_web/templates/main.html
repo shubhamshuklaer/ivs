@@ -13,16 +13,14 @@ th, td {
 </style>
 
 
-<h1>Files</h1>
+<h1>Repositories</h1>
 <table style="width:100%">
 	<tr>
-		<th>Name</th>
-		<th>Path</th>
+		<th>Repositories</th>
 	</tr>
-{% for x in files %}
+{% for x in repos %}
 	<tr>
-	<td> {{ x.name}} </td>
-	<td> {{ x.path }} </td>
+	<td> {{ x.repo}} </td>
 	</tr>
 {% endfor %}
 </table>
