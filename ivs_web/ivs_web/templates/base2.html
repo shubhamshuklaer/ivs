@@ -1,0 +1,27 @@
+<html>
+	<head>
+		<title> This is the title</title>
+	</head>
+	<body>
+	{% if user.is_authenticated %}
+<!--		<a href="/logout">Logout</a>
+		<a href= "/user_info">My Information</a>
+		<a href= "/sent_testimonials">Sent Testimonials</a>
+		<a href= "/my_testimonials">Receieved Testimonials</a>
+		<a href= "/enter_department">Write Testimonial</a>
+		<a href= "/upload_photo">Upload Photo</a>
+		<a href= "/change_password">Change Password</a>  -->
+	{% else %}
+		<a href="/login">Login</a>
+	{% endif %}
+	<a href="/files">Files</a>
+	<a href="/branches">Branches</a>
+	<a href="/commits">Commits</a>
+	<a href="/patches">Patches</a>
+
+	{% block content %}{% endblock %}
+		<footer>
+			<p>Created by: Kunal Khandelwal, Shubham Shukla,  Vibhanshu </p>
+		</footer>
+	</body>
+</html>
