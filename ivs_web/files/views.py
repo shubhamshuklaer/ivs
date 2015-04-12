@@ -40,6 +40,7 @@ def index(request):
 	if 'db' in request.GET.keys() :
 		db= client[request.GET['db']]
 		request.session['db']=request.GET['db']
+		request.session['prefix']=''
 	else:
 		if request.session['db'] == '' :
 			a = db_users.users.find_one( {'user_name':settings.user_name } )
@@ -47,16 +48,19 @@ def index(request):
 	db= client[request.session['db']]
         files = db.files.find()
         for x in files:
-		print x
                 out.append( { 'name':x['name'] , 'path':x['path'] } )
 
 	if  'prefix' in request.session.keys():
 		prefix=request.session['prefix']
 	else:
+		'prefix initialization'
 		prefix=''
+		request.session['prefix']=prefix
 
 	if 'folder' in request.GET.keys():
 		prefix=prefix+request.GET['folder']+'/'
+		request.session['prefix']=prefix
+		
 
 	print 'The prefix is : ' + prefix
 	
@@ -79,13 +83,9 @@ def index(request):
 		else:
 			# extract the folder name
 			k=x['path'].split('/')
-			print 'PATH :',
-			print k
 			folder.add(k[0])
 
 
-	print folder
-	print files
         return render( request , 'files2.html', { 'folders': list(folder), 'files':files } )
 			
 		

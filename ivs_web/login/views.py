@@ -39,5 +39,6 @@ def auth(request):
 		if a['passwd']==request.POST.get('password',''):  # grant access
 			settings.user_name = request.POST.get('username','')   # the currently logged in username
 			print a['repo']
+			request.session['prefix']=''
 			return render( request, 'repos.html', {'repos': a['repo'] } )
 		return render( request, 'registration/login.html' , {'auth_failure':True } )
