@@ -133,7 +133,7 @@ class request_handler(BaseHTTPRequestHandler):
                             if action=="get_need":#items not on server i.e items not in list_commit_uids
                                 temp_len=len(message_commit_uids)
                                 if(temp_len<len(list_commit_uids)):
-                                    data_to_send=dumps("-1")
+                                    data_to_send=dumps("s")
                                 else:
                                     for i in range(temp_len):
                                         if message_commit_uids[i] not in list_commit_uids:

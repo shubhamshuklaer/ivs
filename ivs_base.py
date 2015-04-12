@@ -695,7 +695,7 @@ class ivs:
 
                 for file_path in files_content_dict:
                     recover_text = self.dmp.patch_apply(files_content_dict[file_path], "")[0]
-                    print("recover text for file "+file_path+" : " + recover_text)
+                    #print("recover text for file "+file_path+" : " + recover_text)
                     fp = open(self.get_full_path(file_path),'w')
                     fp.write(recover_text)
                     fp.close()

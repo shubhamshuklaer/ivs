@@ -93,11 +93,11 @@ def repo_delete():
 def get_push_data():
     header_add={"user":user_name,"passwd":passwd}
     need_list_str=process(arg_list[1],"get_need",get_pull_data,None,header_add)
-    if need_list_str == "-1":
-        print("Pull first")
-        sys.exit(0)
-    elif need_list_str != "":
+    if need_list_str != "":
         need_list=loads(need_list_str)
+        if need_list=="s":
+            print("Pull first")
+            sys.exit(0)
     else:
         need_list=[]
     return get_data_for_commits(db_name,need_list)
@@ -207,6 +207,7 @@ for opt,arg in optlist:
         print("user_add remote_server")
         print("serv_create remote_server")
         print("serv_del remote_repo")
+        print("add_perm remote_repo")
         print("valid args "+str(valid_args))
         sys.exit(0)
 
