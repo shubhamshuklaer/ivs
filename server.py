@@ -23,14 +23,14 @@ if __name__=="__main__":
         if opt =="-h":
             print("usage python server.py [-p port_num] [-f num_forks] [-t num_threads_per_fork] [-d service_dir] ")
             sys.exit(0)
-        elif opt =="p":
-            server_settings.port=arg
+        elif opt =="-p":
+            server_settings.port=int(arg)
         elif opt =="-f":
-            server_settings.num_forks=arg
+            server_settings.num_forks=int(arg)
         elif opt == "-t":
-            server_settings.num_threads_per_fork=arg
+            server_settings.num_threads_per_fork=int(arg)
         elif opt == "-d":
-            server_settings.service_dir=arg
+            server_settings.service_dir=int(arg)
 
     
     server=http_server()
