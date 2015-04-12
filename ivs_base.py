@@ -602,7 +602,7 @@ class ivs:
 							"cid": cid,
 							"branch": self.get_cur_branch()
 							}
-						)
+						
 						
 						self.files.update({
 								"path": entry["path"],

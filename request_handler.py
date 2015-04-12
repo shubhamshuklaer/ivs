@@ -6,6 +6,7 @@ from pymongo import Connection
 import os
 from bson.json_util import dumps,loads
 from get_data_for_commits import get_data_for_commits
+from apply_data import apply_data
 from ivs_base import ivs
 import shutil
 #The CGIHTTPServer module defines a request-handler class, 
@@ -80,17 +81,14 @@ class request_handler(BaseHTTPRequestHandler):
 
                         db=mongo_conn[db_name]
                         list_commit_uids=[]
+                        list_commit_child_ids=[]
                         diff_list=[]
 
                         if action=="push":
 
                             print("push message"+str(message))
-
-                            for entity in message["commits"]:
-                                db.commits.insert(entity)
-                                
-                            for entity in message["patches"]:
-                                db.patches.insert(entity)
+                            
+                            apply_data(db_name,message)
 
                             data_to_send="Done"
                         elif action=="add_perm":
@@ -125,20 +123,35 @@ class request_handler(BaseHTTPRequestHandler):
                             res_code=200
                         elif action=="get_need" or action=="pull":
 
-                            for result in db.commits.find({ },{ 'uid': 1, '_id':0 }):
+                            for result in db.commits.find({ },{ 'uid': 1, 'child_ids':1, '_id':0 }):
                                 list_commit_uids.append(result["uid"])
+                                list_commit_child_ids.append(result["child_ids"])
 
+                            message_commit_uids=message["uid_list"]
+                            message_commit_child_ids=message["child_ids_list"]
 
-                            if action=="get_need":
-                                for item in message:
-                                    if item not in list_commit_uids:
-                                        diff_list.append(item)
+                            if action=="get_need":#items not on server i.e items not in list_commit_uids
+                                temp_len=len(message_commit_uids)
+                                for i in range(temp_len):
+                                    if message_commit_uids[i] not in list_commit_uids:
+                                        diff_list.append(message_commit_uids[i])
+                                    else:
+                                        temp_index=list_commit_uids.index(message_commit_uids[i])
+                                        if set(message_commit_child_ids[i]) != set(list_commit_child_ids[temp_index]):
+                                            diff_list.append(message_commit_uids[i])
 
                                 data_to_send=dumps(diff_list)
-                            elif action=="pull":
-                                for item in list_commit_uids:
-                                    if item not in message:
-                                        diff_list.append(item)
+
+                            elif action=="pull":#items not on client i.e items not in message
+
+                                temp_len=len(list_commit_uids)
+                                for i in range(temp_len):
+                                    if list_commit_uids[i] not in message_commit_uids:
+                                        diff_list.append(list_commit_uids[i])
+                                    else:
+                                        temp_index=message_commit_uids.index(list_commit_uids[i])
+                                        if set(message_commit_child_ids[temp_index]) != set(list_commit_child_ids[i]):
+                                            diff_list.append(list_commit_uids[i])
 
                                 data_to_send=get_data_for_commits(db_name,diff_list)
 
