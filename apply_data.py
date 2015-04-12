@@ -9,6 +9,7 @@ def apply_data(db_name,data,root_path):
     patches_list=data["patches"]
     branches_list=data["branches"]
     files_list=data["files"]
+    param_entry=data["params"]
 
     mongo_conn=Connection()
     db=mongo_conn[db_name]
@@ -65,6 +66,21 @@ def apply_data(db_name,data,root_path):
                         "patch_ids": {"$each":entity["patch_ids"]},
                         "deleted_cids":{"$each": entity["deleted_cids"]}
                         }
+                    },
+                upsert=True
+                )
+
+    if len(commits_list)>0 and param_entry !=None:
+        db.params.update({"path":root_path},
+                {
+                        "path": root_path,
+                        "dbname": db_name,
+                        "first_cid": param_entry["first_cid"],
+                        "cur_com_num": param_entry["cur_com_num"],
+                        "last_cid": param_entry["last_cid"],
+                        "cur_com_level": param_entry["cur_com_level"],
+                        "cur_branch": param_entry["cur_branch"],
+                        "cur_patch_num": param_entry["cur_patch_num"],
                     },
                 upsert=True
                 )
