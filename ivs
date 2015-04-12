@@ -12,6 +12,7 @@ from pymongo import Connection
 from get_data_for_commits import get_data_for_commits
 from apply_data import apply_data
 from bson.json_util import dumps,loads
+import requests
 
 user_name=""
 passwd=""
@@ -155,13 +156,17 @@ def process(repo,action,get_data_func,process_data_func,header_add=None):
 
     param={"path":remote_repo_location.path,"action":action,"message":message}
     body=urllib.urlencode(param)
-    conn=httplib.HTTPSConnection(remote_repo_location.netloc)
-    conn.request("POST","",body,header)
-    response=conn.getresponse()
-    print(response.status,response.reason)
+    #conn=httplib.HTTPSConnection(remote_repo_location.netloc)
+    #conn.request("POST","",body,header)
+    #conn=httplib.HTTPSConnection("http://shubham.shukla:r8Qddv1w@202.141.80.19",3128)
+    #conn.set_tunnel(remote_repo_location.netloc)
+    #conn.request("POST","",body,header)
+    #response=conn.getresponse()
+    response=requests.post("https://"+remote_repo_location.netloc,headers=header,data=body,verify=False)
+    print(response.status_code)
     data=""
-    if response.status==200:
-        data=response.read()
+    if response.status_code==200:
+        data=response.text
 
         if process_data_func !=None:
             process_data_func(data)
