@@ -43,6 +43,7 @@ INSTALLED_APPS = (
 	'commits',
 	'params',
 	'patches',
+	'register',
 )
 
 MIDDLEWARE_CLASSES = (

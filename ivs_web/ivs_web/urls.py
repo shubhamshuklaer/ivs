@@ -23,6 +23,7 @@ urlpatterns = patterns('',
   #  	url(r'^accounts/login/$', 'login.views.index',name='login'),
 	url(r'^login/auth$', 'login.views.auth',name='login1'),
     	url(r'^login/$', 'login.views.index',name='login1'),
+	url(r'^register/$', 'register.views.index',name='register'),
    
 
 

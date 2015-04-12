@@ -60,6 +60,15 @@ def index(request):
 	if 'folder' in request.GET.keys():
 		prefix=prefix+request.GET['folder']+'/'
 		request.session['prefix']=prefix
+
+	if 'up' in request.GET.keys():
+		sp = prefix.split('/')
+		print sp
+		prefix = '/'.join(sp[:-2])
+		if prefix!='':
+			prefix=prefix+'/'
+		request.session['prefix']=prefix
+		print sp
 		
 
 	print 'The prefix is : ' + prefix
@@ -89,8 +98,6 @@ def index(request):
         return render( request , 'files2.html', { 'folders': list(folder), 'files':files } )
 			
 		
-		
-
 
 
 

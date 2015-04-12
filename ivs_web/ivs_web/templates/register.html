@@ -2,13 +2,13 @@
 
 {% block content %}
 
-<p> New to IVS . <a href="../register">Register here</a> </p>
-
+<!--
 {% if auth_failure %}
 <p>Your username and password didn't match. Please try again.</p>
 {% endif %}
+-->
 
-<form method="post" action="auth">
+<form method="post" action=".">
 {% csrf_token %}
 <table>
 <tr>
