@@ -88,7 +88,7 @@ class request_handler(BaseHTTPRequestHandler):
                             print("push message")
                             print(message)
                             
-                            apply_data(db_name,message)
+                            apply_data(db_name,message,repo_path)
                             res_code=200
                             data_to_send="Done"
                         elif action=="add_perm":

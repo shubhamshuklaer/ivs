@@ -120,7 +120,7 @@ def process_pull_data(data):
     print("Processing pull response")
     print(data_list)
 
-    apply_data(db_name,data_list)
+    apply_data(db_name,data_list,repo_root)
     
 
     

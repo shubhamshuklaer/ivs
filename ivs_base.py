@@ -161,29 +161,29 @@ class ivs:
 			
 			self.cur_branch = "master"
 			tmp_id = ObjectId()
-			if not server:
-				commit_id = self.commits.insert({
-					"uid":  tmp_id,
-					"patch_ids": [],
-					"ts": time.time(),
-					"msg": "Initial Commit on master",
-					"added": [],
-					"deleted": [],
-					"parent_id": None,
-					"branch": self.cur_branch,
-					"child_ids": [],
-					"num": 1,
-					"level": 1
-					}
-				)
-			self.branches.insert({
-				"name": "master",
-				"commit_ids": [],
-				"head": tmp_id,
-				"tail": tmp_id,
-				"parent_branches": []
-				}
-			)
+                        if not server:
+                            commit_id = self.commits.insert({
+                                "uid":  tmp_id,
+                                "patch_ids": [],
+                                "ts": time.time(),
+                                "msg": "Initial Commit on master",
+                                "added": [],
+                                "deleted": [],
+                                "parent_id": None,
+                                "branch": self.cur_branch,
+                                "child_ids": [],
+                                "num": 1,
+                                "level": 1
+                                }
+                                )
+                            self.branches.insert({
+                                "name": "master",
+                                "commit_ids": [],
+                                "head": tmp_id,
+                                "tail": tmp_id,
+                                "parent_branches": []
+                                }
+                                )
 			
 			self.first_cid = tmp_id
 			self.cur_com_num = 1

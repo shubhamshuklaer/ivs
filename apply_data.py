@@ -1,9 +1,10 @@
 from pymongo import Connection
 from bson.objectid import ObjectId
 from bson.json_util import dumps
+from ivs_base import ivs
 
 
-def apply_data(db_name,data):
+def apply_data(db_name,data,root_path):
     commits_list=data["commits"]
     patches_list=data["patches"]
     branches_list=data["branches"]
@@ -36,7 +37,7 @@ def apply_data(db_name,data):
         db.patches.insert(patch)
 
     for branch in branches_list:
-        db.branch.update({"name":branch["name"]},
+        db.branches.update({"name":branch["name"]},
                 {
 				"name": branch["name"],
 				"commit_ids": branch["commit_ids"],
@@ -68,3 +69,14 @@ def apply_data(db_name,data):
                 upsert=True
                 )
 
+    repo=ivs()
+    repo.set_path(root_path)
+    repo.set_dbname(db_name)
+    repo.load_params()
+    if repo.cur_branch == None:
+        repo.cur_branch="master"
+
+    cur_branch_obj=db.branches.find_one({"name":repo.cur_branch})
+    if cur_branch_obj !=None:
+        head_commit_id=cur_branch_obj["head"]
+        repo.rollback(head_commit_id)
