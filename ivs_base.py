@@ -86,7 +86,7 @@ class ivs:
 			self.params.insert({
 				"path": self.path,
 				"dbname": self.dbname,
-				"uname": self.name,      # added the attributes
+	#			"uname": self.name,      # added the attributes
 				"first_cid": self.first_cid,
 				"cur_com_num": self.cur_com_num,
 				"last_cid": self.last_cid,
@@ -102,7 +102,7 @@ class ivs:
 					'$set': {
 						"path": self.path,
 						"dbname": self.dbname,
-						"uname": self.name       # added the attributes
+		#				"uname": self.name,       # added the attributes
 						"first_cid": self.first_cid,
 						"cur_com_num": self.cur_com_num,
 						"last_cid": self.last_cid,

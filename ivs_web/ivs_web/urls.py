@@ -21,8 +21,8 @@ urlpatterns = patterns('',
 #	url(r'^login/$', 'django.contrib.auth.views.login',name='login'),
 #    	url(r'^accounts/login/$', 'django.contrib.auth.views.login',name='login'),
   #  	url(r'^accounts/login/$', 'login.views.index',name='login'),
-	url(r'^login/auth$', 'login.views.auth',name='login'),
-    	url(r'^login/$', 'login.views.index',name='login'),
+	url(r'^login/auth$', 'login.views.auth',name='login1'),
+    	url(r'^login/$', 'login.views.index',name='login1'),
    
 
 

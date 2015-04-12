@@ -12,6 +12,18 @@ th, td {
 }
 </style>
 
+<h1>Folders</h1>
+<table style="width:100%">
+	<tr>
+		<th>Name</th>
+	</tr>
+{% for x in folders %}
+	<tr>
+	<td><a href="?folder={{x}}"> {{ x }} </a> </td>
+	</tr>
+{% endfor %}
+</table>
+
 
 <h1>Files</h1>
 <table style="width:100%">

@@ -38,5 +38,6 @@ def auth(request):
 		a = db_users.users.find_one( {'user_name':request.POST.get('username','') } )
 		if a['passwd']==request.POST.get('password',''):  # grant access
 			settings.user_name = request.POST.get('username','')   # the currently logged in username
+			print a['repo']
 			return render( request, 'repos.html', {'repos': a['repo'] } )
 		return render( request, 'registration/login.html' , {'auth_failure':True } )

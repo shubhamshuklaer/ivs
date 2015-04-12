@@ -21,7 +21,6 @@ import pymongo as pm
 
 # Create your views here.
 
-@login_required
 def index(request):
         out= []    # this will be sent to page for output
         client = pm.MongoClient()
@@ -31,6 +30,7 @@ def index(request):
 	try:
 		settings.user_name 
 	except:
+		print 'User name not set : ERROR '
 		return redirect('login.views.index')
 
 	conn=pm.Connection()
@@ -39,15 +39,57 @@ def index(request):
 
 	if 'db' in request.GET.keys() :
 		db= client[request.GET['db']]
+		request.session['db']=request.GET['db']
 	else:
-		a = db_users.users.find_one( {'user_name':settings.user_name } )
-		return render( request , 'repos.html', {'repos':a['repo'] } )
+		if request.session['db'] == '' :
+			a = db_users.users.find_one( {'user_name':settings.user_name } )
+			return render( request , 'repos.html', {'repos':a['repo'] } )
+	db= client[request.session['db']]
         files = db.files.find()
         for x in files:
+		print x
                 out.append( { 'name':x['name'] , 'path':x['path'] } )
 
-        print files
-        return render( request , 'files.html', { 'files': out } )
+	if  'prefix' in request.session.keys():
+		prefix=request.session['prefix']
+	else:
+		prefix=''
+
+	if 'folder' in request.GET.keys():
+		prefix=prefix+request.GET['folder']+'/'
+
+	print 'The prefix is : ' + prefix
+	
+
+#        return render( request , 'files.html', { 'files': out } )
+
+# segregate files and folders
+	folder = set()   # a list of folders
+	files = list()
+	out2 = list()
+
+	# remove the prefix
+	for x in out:
+		if prefix==x['path'][0:len(prefix)]:
+			out2.append( { 'name':x['name'] , 'path': x['path'][len(prefix):] } )
+	out=out2
+	for x in out:
+		if len(x['name'])==len(x['path']):
+			files.append( { 'name': x['name'] , 'path' : x['path'] } )
+		else:
+			# extract the folder name
+			k=x['path'].split('/')
+			print 'PATH :',
+			print k
+			folder.add(k[0])
+
+
+	print folder
+	print files
+        return render( request , 'files2.html', { 'folders': list(folder), 'files':files } )
+			
+		
+		
 
 
 
