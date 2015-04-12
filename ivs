@@ -18,7 +18,7 @@ repo_root=""
 repo=ivs()
 
 one_arg_args=["status","delete","log"]
-two_arg_args=["init","bare_init","add","push","pull","commit","rm","branch","chkout","rollback"]
+two_arg_args=["init","bare_init","add","push","pull","commit","rm","branch","chkout","rollback","user_add","add_perm","serv_del","serv_create"]
 three_arg_args=["clone"]
 valid_args=[]
 valid_args=one_arg_args+two_arg_args
@@ -125,15 +125,32 @@ def process_pull_data(data):
 def process_push_data(data):
     print(data)
 
+def process_add_user(data):
+    print(data)
 
+def process_serv_create(data):
+    print(data)
 
-def process(repo,action,get_data_func,process_data_func):
+def process_add_perm(data):
+    print(data)
+
+def process_serv_del(data):
+    print(data)
+
+def process(repo,action,get_data_func,process_data_func,header_add=None):
     message=""
     if get_data_func != None:
         message=get_data_func()
 
     remote_repo_location=urlparse(repo)
-    header={"Content-type": "application/x-www-form-urlencoded","Accept": "text/plain","user":user_name,"passwd":passwd}
+    #the pair of braces {} creates a dict
+    header={"Content-type": "application/x-www-form-urlencoded","Accept": "text/plain"}
+
+    if header_add!=None:
+        z = header.copy()
+        z.update(header_add)
+        header=z
+
     param={"path":remote_repo_location.path,"action":action,"message":message}
     body=urllib.urlencode(param)
     conn=httplib.HTTPSConnection(remote_repo_location.netloc)
@@ -143,7 +160,6 @@ def process(repo,action,get_data_func,process_data_func):
     data=""
     if response.status==200:
         data=response.read()
-        print(data)
 
         if process_data_func !=None:
             process_data_func(data)
@@ -179,6 +195,9 @@ for opt,arg in optlist:
         print("init db_name")
         print("bare_init db_name")
         print("commit message")
+        print("user_add remote_server")
+        print("serv_create remote_server")
+        print("serv_del remote_repo")
         print("valid args "+str(valid_args))
         sys.exit(0)
 
@@ -197,7 +216,28 @@ if arg_list[0] in valid_args:
             print("wrong no of args use -h for help")
             sys.exit(2)
 
-    if arg_list[0] in ["init","bare_init","clone"]:
+    if arg_list[0] in ["user_add"]:
+        print("Enter new user name and password:")
+        get_auth()
+        header_add={"user":user_name,"passwd":passwd}
+        process(arg_list[1],"user_add",None,process_add_user,header_add)
+
+    elif arg_list[0] in ["serv_create","add_perm","serv_del"]:
+        get_auth()
+        if arg_list[0] == "serv_create":
+            new_repo_name=raw_input("Enter new repo name : ")
+            new_db_name=new_repo_name
+            header_add={"user":user_name,"passwd":passwd,"new_repo":new_repo_name,"db_name":new_db_name}
+            process(arg_list[1],"serv_create",None,process_serv_create,header_add)
+        elif arg_list[0] == "serv_del":
+            header_add={"user":user_name,"passwd":passwd}
+            process(arg_list[1],"serv_del",None,process_serv_del,header_add)
+        elif arg_list[0] == "add_perm":
+            add_perm_for_user=raw_input("Add permission for(give username) : ")
+            header_add={"user":user_name,"passwd":passwd,"add_perm_for_user":add_perm_for_user}
+            process(arg_list[1],"add_perm",None,process_add_perm,header_add)
+
+    elif arg_list[0] in ["init","bare_init","clone"]:
         repo_root=os.getcwd()
         db_name=arg_list[1]
         set_repo_param()
@@ -213,15 +253,15 @@ if arg_list[0] in valid_args:
         get_repo_root()
         get_db_name()
         set_repo_param()
-        # print(repo.get_path(),repo.get_dbname())
 
         if arg_list[0] in ["pull","push"]:
             get_auth()
+            header_add={"user":user_name,"passwd":passwd}
             if arg_list[0] == "pull":
-                process(arg_list[1],"pull",get_pull_data,process_pull_data)
+                process(arg_list[1],"pull",get_pull_data,process_pull_data,header_add)
             elif arg_list[0] == "push":
-                process(arg_list[1],"push",get_push_data,process_push_data)
-                pass
+                process(arg_list[1],"push",get_push_data,process_push_data,header_add)
+
         else:
             if arg_list[0] == "add":
                 repo_add()

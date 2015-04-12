@@ -4,12 +4,30 @@
 !_TAG_PROGRAM_NAME	Exuberant Ctags	//
 !_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
 !_TAG_PROGRAM_VERSION	5.9~svn20110310	//
+ALLOWED_HOSTS	ivs_web/ivs_web/settings.py	/^ALLOWED_HOSTS = []$/;"	v
+BASE_DIR	ivs_web/ivs_web/settings.py	/^BASE_DIR = os.path.dirname(os.path.dirname(__file__))$/;"	v
 BLANKLINEEND	diff_match_patch.py	/^  BLANKLINEEND = re.compile(r"\\n\\r?\\n$");$/;"	v	class:diff_match_patch
 BLANKLINESTART	diff_match_patch.py	/^  BLANKLINESTART = re.compile(r"^\\r?\\n\\r?\\n");$/;"	v	class:diff_match_patch
+DATABASES	ivs_web/ivs_web/settings.py	/^DATABASES = {$/;"	v
+DEBUG	ivs_web/ivs_web/settings.py	/^DEBUG = True$/;"	v
 DIFF_DELETE	diff_match_patch.py	/^  DIFF_DELETE = -1$/;"	v	class:diff_match_patch
 DIFF_EQUAL	diff_match_patch.py	/^  DIFF_EQUAL = 0$/;"	v	class:diff_match_patch
 DIFF_INSERT	diff_match_patch.py	/^  DIFF_INSERT = 1$/;"	v	class:diff_match_patch
+INSTALLED_APPS	ivs_web/ivs_web/settings.py	/^INSTALLED_APPS = ($/;"	v
+LANGUAGE_CODE	ivs_web/ivs_web/settings.py	/^LANGUAGE_CODE = 'en-us'$/;"	v
+MIDDLEWARE_CLASSES	ivs_web/ivs_web/settings.py	/^MIDDLEWARE_CLASSES = ($/;"	v
+PROJECT_PATH	ivs_web/ivs_web/settings.py	/^PROJECT_PATH = os.path.realpath(os.path.dirname(__file__))$/;"	v
 PooledProcessMixIn	PooledProcessMixIn.py	/^class PooledProcessMixIn:$/;"	c
+ROOT_URLCONF	ivs_web/ivs_web/settings.py	/^ROOT_URLCONF = 'ivs_web.urls'$/;"	v
+SECRET_KEY	ivs_web/ivs_web/settings.py	/^SECRET_KEY = '2d%$29h%a)e3b2d3q4h%$a^wn6l7@c#ul=jn3hi!nb!x%3rypk'$/;"	v
+STATIC_URL	ivs_web/ivs_web/settings.py	/^STATIC_URL = '\/static\/'$/;"	v
+TEMPLATE_DEBUG	ivs_web/ivs_web/settings.py	/^TEMPLATE_DEBUG = True$/;"	v
+TEMPLATE_DIRS	ivs_web/ivs_web/settings.py	/^TEMPLATE_DIRS =  ($/;"	v
+TIME_ZONE	ivs_web/ivs_web/settings.py	/^TIME_ZONE = 'UTC'$/;"	v
+USE_I18N	ivs_web/ivs_web/settings.py	/^USE_I18N = True$/;"	v
+USE_L10N	ivs_web/ivs_web/settings.py	/^USE_L10N = True$/;"	v
+USE_TZ	ivs_web/ivs_web/settings.py	/^USE_TZ = True$/;"	v
+WSGI_APPLICATION	ivs_web/ivs_web/settings.py	/^WSGI_APPLICATION = 'ivs_web.wsgi.application'$/;"	v
 __author__	PooledProcessMixIn.py	/^__author__ = 'Muayyad Saleh Alsadi'$/;"	v
 __author__	diff_match_patch.py	/^__author__ = 'fraser@google.com (Neil Fraser)'$/;"	v
 __init__	diff_match_patch.py	/^  def __init__(self):$/;"	m	class:diff_match_patch
@@ -28,6 +46,8 @@ _real_handle_request_noblock	PooledProcessMixIn.py	/^    def _real_handle_reques
 _thread_loop	PooledProcessMixIn.py	/^    def _thread_loop(self):$/;"	m	class:PooledProcessMixIn
 add	ivs_base.py	/^	def add(self, path):$/;"	m	class:ivs
 add	ref/mongodb.py	/^	def add(self, path):$/;"	m	class:ivs
+add_perm_for	ivs	/^                add_perm_for=raw_input("Add permission for(give username) : ")$/;"	v
+application	ivs_web/ivs_web/wsgi.py	/^application = get_wsgi_application()$/;"	v
 checkout	ivs_base.py	/^	def checkout(self, branch):$/;"	m	class:ivs
 commit	ivs_base.py	/^	def commit(self, msg):$/;"	m	class:ivs
 commit	ref/mongodb.py	/^	def commit(self, msg):$/;"	m	class:ivs
@@ -39,6 +59,7 @@ dec_com_level	ivs_base.py	/^	def dec_com_level(self):$/;"	m	class:ivs
 dec_com_num	ivs_base.py	/^	def dec_com_num(self):$/;"	m	class:ivs
 delete	ivs_base.py	/^	def delete(self):$/;"	m	class:ivs
 delete	ref/mongodb.py	/^	def delete(self):$/;"	m	class:ivs
+delete_tree	ivs_base.py	/^	def delete_tree(self, cid):$/;"	m	class:ivs
 diff_bisect	diff_match_patch.py	/^  def diff_bisect(self, text1, text2, deadline):$/;"	m	class:diff_match_patch
 diff_bisectSplit	diff_match_patch.py	/^  def diff_bisectSplit(self, text1, text2, x, y, deadline):$/;"	m	class:diff_match_patch
 diff_charsToLines	diff_match_patch.py	/^  def diff_charsToLines(self, diffs, lineArray):$/;"	m	class:diff_match_patch
@@ -89,10 +110,22 @@ get_path	ref/mongodb.py	/^	def get_path(self):$/;"	m	class:ivs
 get_pull_data	ivs	/^def get_pull_data():$/;"	f
 get_push_data	ivs	/^def get_push_data():$/;"	f
 get_repo_root	ivs	/^def get_repo_root():$/;"	f
+header_add	ivs	/^                header_add={"user":user_name,"passwd":passwd,"add_perm_for":add_perm_for}$/;"	v
+header_add	ivs	/^                header_add={"user":user_name,"passwd":passwd,"new_repo":arg_list[2]}$/;"	v
+header_add	ivs	/^            header_add={"user":user_name,"passwd":passwd}$/;"	v
+header_add	ivs	/^        header_add={"user":user_name,"passwd":passwd}$/;"	v
 http_server	http_server.py	/^class http_server(PooledProcessMixIn,HTTPServer):$/;"	c
 inc_com_level	ivs_base.py	/^	def inc_com_level(self):$/;"	m	class:ivs
 inc_com_num	ivs_base.py	/^	def inc_com_num(self):$/;"	m	class:ivs
 inc_patch_num	ivs_base.py	/^	def inc_patch_num(self):$/;"	m	class:ivs
+index	ivs_web/branches/views.py	/^def index(request):$/;"	f
+index	ivs_web/commits/views.py	/^def index(request):$/;"	f
+index	ivs_web/files/views (copy).py	/^def index(request):$/;"	f
+index	ivs_web/files/views.py	/^def index(request):$/;"	f
+index	ivs_web/ivs_web/views.py	/^def index(request):$/;"	f
+index	ivs_web/main/views.py	/^def index(request):$/;"	f
+index	ivs_web/params/views.py	/^def index(request):$/;"	f
+index	ivs_web/patches/views.py	/^def index(request):$/;"	f
 init	ivs_base.py	/^	def init(self,server=False):$/;"	m	class:ivs
 init	ref/mongodb.py	/^	def init(self):$/;"	m	class:ivs
 init	server_settings.py	/^def init():$/;"	f
@@ -111,6 +144,7 @@ match_bitap	diff_match_patch.py	/^  def match_bitap(self, text, pattern, loc):$/
 match_bitapScore	diff_match_patch.py	/^    def match_bitapScore(e, x):$/;"	f	function:diff_match_patch.match_bitap
 match_main	diff_match_patch.py	/^  def match_main(self, text, pattern, loc):$/;"	m	class:diff_match_patch
 mongo_client	ivs	/^mongo_client=None$/;"	v
+one_arg_args	ivs	/^one_arg_args=["status","delete","log"]$/;"	v
 passwd	ivs	/^passwd=""$/;"	v
 patch_addContext	diff_match_patch.py	/^  def patch_addContext(self, patch, text):$/;"	m	class:diff_match_patch
 patch_addPadding	diff_match_patch.py	/^  def patch_addPadding(self, patches):$/;"	m	class:diff_match_patch
@@ -123,9 +157,11 @@ patch_splitMax	diff_match_patch.py	/^  def patch_splitMax(self, patches):$/;"	m	
 patch_toText	diff_match_patch.py	/^  def patch_toText(self, patches):$/;"	m	class:diff_match_patch
 path_to_commit	ivs_base.py	/^	def path_to_commit(self, cid):$/;"	m	class:ivs
 pool_shutdown	PooledProcessMixIn.py	/^    def pool_shutdown(self):$/;"	m	class:PooledProcessMixIn
-process	ivs	/^def process(repo,action,get_data_func,process_data_func):$/;"	f
+process	ivs	/^def process(repo,action,get_data_func,process_data_func,header_add=None):$/;"	f
+process_add_user	ivs	/^def process_add_user(data):$/;"	f
 process_pull_data	ivs	/^def process_pull_data(data):$/;"	f
 process_push_data	ivs	/^def process_push_data(data):$/;"	f
+process_serv_create	ivs	/^def process_serv_create(data):$/;"	f
 remove	ivs_base.py	/^	def remove(self, path):$/;"	m	class:ivs
 repo	ivs	/^repo=ivs()$/;"	v
 repo	ref/mongodb.py	/^	repo = ivs()$/;"	v	class:ivs
@@ -135,6 +171,7 @@ repo_clone	ivs	/^def repo_clone():$/;"	f
 repo_commit	ivs	/^def repo_commit():$/;"	f
 repo_delete	ivs	/^def repo_delete():$/;"	f
 repo_init	ivs	/^def repo_init():$/;"	f
+repo_remove	ivs	/^def repo_remove():$/;"	f
 repo_root	ivs	/^        repo_root=os.getcwd()$/;"	v
 repo_root	ivs	/^repo_root=""$/;"	v
 repo_status	ivs	/^def repo_status():$/;"	f
@@ -162,8 +199,13 @@ show	ref/mongodb.py	/^	def show(self, col, name):$/;"	m	class:ivs
 shutdown	PooledProcessMixIn.py	/^    def shutdown(self):$/;"	m	class:PooledProcessMixIn
 status	ivs_base.py	/^	def status(self):$/;"	m	class:ivs
 status	ref/mongodb.py	/^	def status(self):$/;"	m	class:ivs
-tree	ivs_base.py	/^	def tree(self):$/;"	m	class:ivs
+three_arg_args	ivs	/^three_arg_args=["clone","serv_create"]$/;"	v
+tree	ivs_base.py	/^	def tree(self, level = 0):$/;"	m	class:ivs
+two_arg_args	ivs	/^two_arg_args=["init","bare_init","add","push","pull","commit","rm","branch","chkout","rollback","user_add","add_perm"]$/;"	v
 update	ivs_base.py	/^	def update(self):$/;"	m	class:ivs
 update	ref/mongodb.py	/^	def update(self):$/;"	m	class:ivs
+urlpatterns	ivs_web/ivs_web/urls.py	/^urlpatterns = patterns('',$/;"	v
 user_name	ivs	/^user_name=""$/;"	v
-valid_args	ivs	/^valid_args=["init","commit","status","add","push","pull","delete","bare_init","clone"]$/;"	v
+valid_args	ivs	/^valid_args=[]$/;"	v
+valid_args	ivs	/^valid_args=one_arg_args+two_arg_args$/;"	v
+valid_args	ivs	/^valid_args=valid_args+three_arg_args$/;"	v

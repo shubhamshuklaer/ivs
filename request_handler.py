@@ -6,6 +6,8 @@ from pymongo import Connection
 import os
 from bson.json_util import dumps,loads
 from get_data_for_commits import get_data_for_commits
+from ivs_base import ivs
+import shutil
 #The CGIHTTPServer module defines a request-handler class, 
 #interface compatible with BaseHTTPServer.BaseHTTPRequestHandler 
 #and inherits behavior from SimpleHTTPServer.SimpleHTTPRequestHandler 
@@ -16,71 +18,133 @@ class request_handler(BaseHTTPRequestHandler):
         user_name=self.headers.getheader('user')
         passwd=self.headers.getheader('passwd')
         data_to_send=""
-        mong_conn=Connection()
-        db=mong_conn[server_settings.user_auth_db_name]
+        mong_conn_users=Connection()
+        db_users=mong_conn_users[server_settings.user_auth_db_name]
         length = int(self.headers.getheader('content-length'))
         body=self.rfile.read(length)
-        param=urlparse.parse_qs(body)
+        param=urlparse.parse_qs(body,True)#true keeps blank entries in dict
         action=param["action"][0]
-        message=loads(param["message"][0])
-        path=param["path"][0][1:]#[1:] is so that we skip the first char which is /
+        message=""
+        if param["message"][0] != "":
+            message=loads(param["message"][0])
+        path=""
+        if param["path"][0] !="":
+            path=param["path"][0][1:]#[1:] is so that we skip the first char which is /
 
 
-        auth_ret=db.users.find({"user_name":user_name,"passwd":passwd,"repo":path}).count()>0
-
-        if auth_ret:
-            mongo_conn=Connection()
-            print(server_settings.service_dir)
-            repo_path=os.path.abspath(os.path.join(server_settings.service_dir,path))    
-            print(repo_path)
-            ivs_folder=os.path.abspath(os.path.join(repo_path,".ivs"))
-            db_name_file_name=os.path.abspath(os.path.join(ivs_folder,"db_name"))
-            print(db_name_file_name)
-
-            if not os.path.exists(db_name_file_name):
-                res_code=404
-            else: 
-                db_name_file=open(db_name_file_name,"r")
-                db_name=db_name_file.readline().rstrip("\n")
-                db_name_file.close()
-
-                db=mongo_conn[db_name]
-                list_commit_uids=[]
-                diff_list=[]
-
-                if action=="push":
-
-                    print("push message"+str(message))
-
-                    for entity in message["commits"]:
-                        db.commits.insert(entity)
-                        
-                    for entity in message["patches"]:
-                        db.patches.insert(entity)
-
-                    data_to_send="Done"
-                elif action=="get_need" or action=="pull":
-
-                    for result in db.commits.find({ },{ 'uid': 1, '_id':0 }):
-                        list_commit_uids.append(result["uid"])
-
-
-                    if action=="get_need":
-                        for item in message:
-                            if item not in list_commit_uids:
-                                diff_list.append(item)
-
-                        data_to_send=dumps(diff_list)
-                    elif action=="pull":
-                        for item in list_commit_uids:
-                            if item not in message:
-                                diff_list.append(item)
-
-                        data_to_send=get_data_for_commits(db_name,diff_list)
-
-                res_code=200
+        if action in ["user_add"]:
+            if db_users.users.find({"user_name":user_name}).count() > 0:
+                data_to_send=dumps("user already exist")
+            else:
+                db_users.users.insert({"user_name":user_name,"passwd":passwd,"repo":[""]})
+                data_to_send=dumps("user added")
+            res_code=200
         else:
-            res_code=403
+            auth_ret=db_users.users.find({"user_name":user_name,"passwd":passwd,"repo":path}).count()>0
+
+            if auth_ret:
+                if action=="serv_create":
+                    new_repo=self.headers.getheader("new_repo")
+                    new_repo_path=os.path.join(server_settings.service_dir,user_name)
+                    new_repo_path=os.path.join(new_repo_path,new_repo)
+
+                    if os.path.exists(new_repo_path):
+                        data_to_send=dumps("Repo already exist")
+                    else:
+                        repo=ivs()
+                        repo_root=new_repo_path
+                        db_name=self.headers.getheader("db_name")
+                        repo.set_path(repo_root)
+                        repo.set_dbname(user_name+"_"+db_name)
+                        repo.init(True)
+                        temp_ret_struct=db_users.users.update({"user_name":user_name},{
+                            "$addToSet" : {
+                                    "repo": user_name+"/"+new_repo
+                                }
+                        })
+                        print("fsdfsad"+str(temp_ret_struct))
+                        data_to_send=dumps("Initialized new repo "+user_name+"/"+new_repo)
+                    res_code=200
+                else:
+                    mongo_conn=Connection()
+                    repo_path=os.path.abspath(os.path.join(server_settings.service_dir,path))    
+                    ivs_folder=os.path.abspath(os.path.join(repo_path,".ivs"))
+                    db_name_file_name=os.path.abspath(os.path.join(ivs_folder,"db_name"))
+
+                    if not os.path.exists(db_name_file_name):
+                        res_code=404
+                    else: 
+                        db_name_file=open(db_name_file_name,"r")
+                        db_name=db_name_file.readline().rstrip("\n")
+                        db_name_file.close()
+
+                        db=mongo_conn[db_name]
+                        list_commit_uids=[]
+                        diff_list=[]
+
+                        if action=="push":
+
+                            print("push message"+str(message))
+
+                            for entity in message["commits"]:
+                                db.commits.insert(entity)
+                                
+                            for entity in message["patches"]:
+                                db.patches.insert(entity)
+
+                            data_to_send="Done"
+                        elif action=="add_perm":
+                            add_perm_for_user=self.headers.getheader("add_perm_for_user")
+                            if db_users.users.find({"user_name":add_perm_for_user}).count()>0:
+                                db_users.users.update({"user_name":add_perm_for_user},{
+                                    "$addToSet": {
+                                            "repo": path
+                                        }
+                                })
+                                data_to_send="Success"
+                            else:
+                                data_to_send=dumps(add_perm_for_user+" user doesn't exist")
+
+                            res_code=200
+                        elif action=="serv_del":
+                            repo=ivs()
+                            repo_root=os.path.join(server_settings.service_dir,path)
+                            repo.set_path(repo_root)
+                            repo.set_dbname(db_name)
+                            repo.delete()
+                            db_users.users.update({},{
+                                "$pull": {
+                                        "repo": path
+                                    }},
+                                        multi= True
+                            )
+                            mongo_conn.drop_database(db_name) 
+                            shutil.rmtree(repo_root)
+                            data_to_send="Deleted repo"
+                            
+                            res_code=200
+                        elif action=="get_need" or action=="pull":
+
+                            for result in db.commits.find({ },{ 'uid': 1, '_id':0 }):
+                                list_commit_uids.append(result["uid"])
+
+
+                            if action=="get_need":
+                                for item in message:
+                                    if item not in list_commit_uids:
+                                        diff_list.append(item)
+
+                                data_to_send=dumps(diff_list)
+                            elif action=="pull":
+                                for item in list_commit_uids:
+                                    if item not in message:
+                                        diff_list.append(item)
+
+                                data_to_send=get_data_for_commits(db_name,diff_list)
+
+                        res_code=200
+            else:
+                res_code=403
 
         self.send_response(res_code)
         self.send_header('Content-type','text/html')
