@@ -20,6 +20,12 @@ class ivs:
 	def __init__(self):
 		pass
 
+	def set_uname(self,name):
+		self.name=name;
+
+	def get_uname(self):
+		return self.name
+
 	def set_path(self, path):
 		self.path = path
 
@@ -80,6 +86,7 @@ class ivs:
 			self.params.insert({
 				"path": self.path,
 				"dbname": self.dbname,
+				"uname": self.name,      # added the attributes
 				"first_cid": self.first_cid,
 				"cur_com_num": self.cur_com_num,
 				"last_cid": self.last_cid,
@@ -95,6 +102,7 @@ class ivs:
 					'$set': {
 						"path": self.path,
 						"dbname": self.dbname,
+						"uname": self.name       # added the attributes
 						"first_cid": self.first_cid,
 						"cur_com_num": self.cur_com_num,
 						"last_cid": self.last_cid,
@@ -193,7 +201,9 @@ class ivs:
 			
 			client = MongoClient()
 			dbs = client['ivs']   # the database to store the connections
-			dbs.ivs.insert( {'repo': self.dbname } )   # separte entry for each repo
+	#		dbs.ivs.insert( {'repo': self.dbname } )   # separte entry for each repo
+			# TODO
+	#		dbs.ivs.insert( {'repo': self.dbname , 'user': } )   # separte entry for each repo
 		
 		#	self.ivs.insert( { 'repo': self.dbname } )
 
