@@ -89,10 +89,13 @@ def apply_data(db_name,data,root_path):
     repo.set_path(root_path)
     repo.set_dbname(db_name)
     repo.load_params()
-    if repo.cur_branch == None:
-        repo.cur_branch="master"
+    param = self.params.find_one({"path": self.path})
+    if param==None or repo.cur_branch == None:
+        cur_branch="master"
+    else:
+        cur_branch=repo.cur_branch
 
-    cur_branch_obj=db.branches.find_one({"name":repo.cur_branch})
+    cur_branch_obj=db.branches.find_one({"name":cur_branch})
     if cur_branch_obj !=None:
         head_commit_id=cur_branch_obj["head"]
         repo.rollback(head_commit_id)

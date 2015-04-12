@@ -1,5 +1,6 @@
 #!/usr/bin/python
 import httplib
+from bson.objectid import ObjectId
 import sys
 import getopt
 from urlparse import urlparse
@@ -162,6 +163,7 @@ def process(repo,action,get_data_func,process_data_func,header_add=None):
     #conn.set_tunnel(remote_repo_location.netloc)
     #conn.request("POST","",body,header)
     #response=conn.getresponse()
+    os.environ['NO_PROXY'] = '127.0.0.1'
     response=requests.post("https://"+remote_repo_location.netloc,headers=header,data=body,verify=False)
     print(response.status_code)
     data=""
@@ -279,7 +281,7 @@ if arg_list[0] in valid_args:
             elif arg_list[0] == "chkout":
                 repo.checkout(arg_list[1])
             elif arg_list[0] == "rollback":
-                repo.rollback(arg_list[1])
+                repo.rollback(ObjectId(arg_list[1]))
             elif arg_list[0] == "db":
                 repo_remove()
             elif arg_list[0] == "commit":

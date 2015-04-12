@@ -201,7 +201,8 @@ class ivs:
 			self.delete()
 			self.init(server)
 
-		self.save_params()
+                if not server:
+                    self.save_params()
 
 		db_name_file=open(os.path.join(repo_dir,"db_name"),'w')
 		db_name_file.write(self.dbname+"\n")
@@ -655,6 +656,7 @@ class ivs:
 			return
 		# print "Rolling back to : " + str(cid)
 		files_to_delete = set()
+                files_content_dict=dict()
 		for com_id in path:
 			commit = self.commits.find_one({"uid": com_id})
 			for f in commit["added"]:
@@ -670,7 +672,6 @@ class ivs:
 			
 			mongo_patch_cur=self.patches.find({"uid": { "$in": commit["patch_ids"]}})
 
-			patch_obj_arr = []
 			file_path = None
 			for mongo_patch in mongo_patch_cur:
 
@@ -684,15 +685,20 @@ class ivs:
 
 				patch_obj=dmp_module.patch_obj()
 				patch_obj.fill_dict(patch_dict)
-				patch_obj_arr.append(patch_obj)	
 
 				file_path = mongo_patch["file_path"]
+                                if file_path not in files_content_dict:
+                                    files_content_dict[file_path]=[]
 
-			recover_text = self.dmp.patch_apply(patch_obj_arr, "")[0]
-			# print "recover text: " + recover_text
-			fp = open(self.get_full_path(file_path),'w')
-			fp.write(recover_text)
-			fp.close()
+				files_content_dict[file_path].append(patch_obj)	
+
+
+                for file_path in files_content_dict:
+                    recover_text = self.dmp.patch_apply(files_content_dict[file_path], "")[0]
+                    print("recover text for file "+file_path+" : " + recover_text)
+                    fp = open(self.get_full_path(file_path),'w')
+                    fp.write(recover_text)
+                    fp.close()
 
 		for file_path in files_to_delete:
 			os.unlink(os.path.join(self.path, file_path))
