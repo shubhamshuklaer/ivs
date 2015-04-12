@@ -91,7 +91,10 @@ def repo_delete():
 def get_push_data():
     header_add={"user":user_name,"passwd":passwd}
     need_list_str=process(arg_list[1],"get_need",get_pull_data,None,header_add)
-    if need_list_str != "":
+    if need_list_str == "-1":
+        print("Pull first")
+        sys.exit(0)
+    elif need_list_str != "":
         need_list=loads(need_list_str)
     else:
         need_list=[]
@@ -114,7 +117,8 @@ def get_pull_data():
 def process_pull_data(data):
     data_list=loads(data)
     
-    print("Processing pull response"+str(data_list))
+    print("Processing pull response")
+    print(data_list)
 
     apply_data(db_name,data_list)
     

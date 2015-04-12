@@ -27,7 +27,7 @@ def apply_data(db_name,data):
                         "num": commit["num"],
                         "level": commit["level"]
                     },
-                    "$addToSet": { "child_ids" : commit["child_ids"]},
+                    "$addToSet": { "child_ids" :{"$each": commit["child_ids"]}},
                     },
                 upsert=True
                 )
@@ -61,9 +61,10 @@ def apply_data(db_name,data):
                         "added_cids": entity["added_cids"],
                     },
                     "$addToSet":{
-                        "patch_ids": entity["patch_ids"],
-                        "deleted_cids": entity["deleted_cids"]
+                        "patch_ids": {"$each":entity["patch_ids"]},
+                        "deleted_cids":{"$each": entity["deleted_cids"]}
                         }
                     },
                 upsert=True
                 )
+

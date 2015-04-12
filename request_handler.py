@@ -41,7 +41,6 @@ class request_handler(BaseHTTPRequestHandler):
                 data_to_send=dumps("user added")
             res_code=200
         else:
-            print({"user_name":user_name,"passwd":passwd,"repo":path})
             auth_ret=db_users.users.find({"user_name":user_name,"passwd":passwd,"repo":path}).count()>0
 
             if auth_ret:
@@ -64,7 +63,6 @@ class request_handler(BaseHTTPRequestHandler):
                                     "repo": user_name+"/"+new_repo
                                 }
                         })
-                        print("fsdfsad"+str(temp_ret_struct))
                         data_to_send=dumps("Initialized new repo "+user_name+"/"+new_repo)
                     res_code=200
                 else:
@@ -87,10 +85,10 @@ class request_handler(BaseHTTPRequestHandler):
 
                         if action=="push":
 
-                            print("push message"+str(message))
+                            print("push message")
+                            print(message)
                             
                             apply_data(db_name,message)
-                            print("fsdfsad")
                             res_code=200
                             data_to_send="Done"
                         elif action=="add_perm":
@@ -134,17 +132,18 @@ class request_handler(BaseHTTPRequestHandler):
 
                             if action=="get_need":#items not on server i.e items not in list_commit_uids
                                 temp_len=len(message_commit_uids)
-                                for i in range(temp_len):
-                                    if message_commit_uids[i] not in list_commit_uids:
-                                        diff_list.append(message_commit_uids[i])
-                                    else:
-                                        temp_index=list_commit_uids.index(message_commit_uids[i])
-                                        print("message_commit_child_ids"+str(message_commit_child_ids))
-                                        print("list_commit_child_ids"+str(list_commit_child_ids))
-                                        if set(message_commit_child_ids[i]) != set(list_commit_child_ids[temp_index]):
+                                if(temp_len<len(list_commit_uids)):
+                                    data_to_send=dumps("-1")
+                                else:
+                                    for i in range(temp_len):
+                                        if message_commit_uids[i] not in list_commit_uids:
                                             diff_list.append(message_commit_uids[i])
+                                        else:
+                                            temp_index=list_commit_uids.index(message_commit_uids[i])
+                                            if len(message_commit_child_ids[i]) > len(list_commit_child_ids[temp_index]):
+                                                diff_list.append(message_commit_uids[i])
 
-                                data_to_send=dumps(diff_list)
+                                    data_to_send=dumps(diff_list)
 
                             elif action=="pull":#items not on client i.e items not in message
 
@@ -154,9 +153,7 @@ class request_handler(BaseHTTPRequestHandler):
                                         diff_list.append(list_commit_uids[i])
                                     else:
                                         temp_index=message_commit_uids.index(list_commit_uids[i])
-                                        print("message_commit_child_ids"+str(message_commit_child_ids))
-                                        print("list_commit_child_ids"+str(list_commit_child_ids))
-                                        if set(message_commit_child_ids[temp_index]) != set(list_commit_child_ids[i]):
+                                        if len(list_commit_child_ids[i]) > len(message_commit_child_ids[temp_index]):
                                             diff_list.append(list_commit_uids[i])
 
                                 data_to_send=get_data_for_commits(db_name,diff_list)
