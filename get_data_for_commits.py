@@ -18,6 +18,7 @@ def get_data_for_commits(db_name,commit_uid_list):
     selected_branches_list=[]
 
     file_paths=[]
+    branches=[]
 
     for entity in selected_commits:
         patch_ids.append(entity["patch_ids"])
@@ -27,6 +28,7 @@ def get_data_for_commits(db_name,commit_uid_list):
 
     for entity in selected_patches:
         file_paths.append(entity["path"])
+        branches.append(entity["branch"])
         selected_patches_list.append(entity)
 
     selected_files=db.files.find({'path':{'$in':file_paths}})
@@ -34,7 +36,7 @@ def get_data_for_commits(db_name,commit_uid_list):
     for entity in selected_files:
         selected_files_list.append(entity)
 
-    selected_branches=db.branches.find()
+    selected_branches=db.branches.find({'path':{'$in':branches}})
 
     for entity in selected_branches:
         selected_branches_list.append(entity)

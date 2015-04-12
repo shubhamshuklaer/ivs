@@ -41,6 +41,7 @@ class request_handler(BaseHTTPRequestHandler):
                 data_to_send=dumps("user added")
             res_code=200
         else:
+            print({"user_name":user_name,"passwd":passwd,"repo":path})
             auth_ret=db_users.users.find({"user_name":user_name,"passwd":passwd,"repo":path}).count()>0
 
             if auth_ret:
@@ -89,7 +90,8 @@ class request_handler(BaseHTTPRequestHandler):
                             print("push message"+str(message))
                             
                             apply_data(db_name,message)
-
+                            print("fsdfsad")
+                            res_code=200
                             data_to_send="Done"
                         elif action=="add_perm":
                             add_perm_for_user=self.headers.getheader("add_perm_for_user")
@@ -125,7 +127,7 @@ class request_handler(BaseHTTPRequestHandler):
 
                             for result in db.commits.find({ },{ 'uid': 1, 'child_ids':1, '_id':0 }):
                                 list_commit_uids.append(result["uid"])
-                                list_commit_child_ids.append(result["child_ids"])
+                                list_commit_child_ids.append(str(result["child_ids"]))
 
                             message_commit_uids=message["uid_list"]
                             message_commit_child_ids=message["child_ids_list"]
@@ -137,6 +139,8 @@ class request_handler(BaseHTTPRequestHandler):
                                         diff_list.append(message_commit_uids[i])
                                     else:
                                         temp_index=list_commit_uids.index(message_commit_uids[i])
+                                        print("message_commit_child_ids"+str(message_commit_child_ids))
+                                        print("list_commit_child_ids"+str(list_commit_child_ids))
                                         if set(message_commit_child_ids[i]) != set(list_commit_child_ids[temp_index]):
                                             diff_list.append(message_commit_uids[i])
 
@@ -150,6 +154,8 @@ class request_handler(BaseHTTPRequestHandler):
                                         diff_list.append(list_commit_uids[i])
                                     else:
                                         temp_index=message_commit_uids.index(list_commit_uids[i])
+                                        print("message_commit_child_ids"+str(message_commit_child_ids))
+                                        print("list_commit_child_ids"+str(list_commit_child_ids))
                                         if set(message_commit_child_ids[temp_index]) != set(list_commit_child_ids[i]):
                                             diff_list.append(list_commit_uids[i])
 

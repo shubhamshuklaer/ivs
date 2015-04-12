@@ -594,14 +594,15 @@ class ivs:
 					# print patches[0].patchs
 					for patch in patches:
 						pid = ObjectId()
-						self.patches.insert({
-							"uid": pid,
-							"dict": patch.patch_dict,
-							"num": self.get_next_patch_num(),
-							"file_path": entry["path"],
-							"cid": cid,
-							"branch": self.get_cur_branch()
-							}
+                                                self.patches.insert({
+                                                    "uid": pid,
+                                                    "dict": patch.patch_dict,
+                                                    "num": self.get_next_patch_num(),
+                                                    "file_path": entry["path"],
+                                                    "cid": cid,
+                                                    "branch": self.get_cur_branch()
+                                                    }
+                                                )
 						
 						
 						self.files.update({

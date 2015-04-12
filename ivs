@@ -76,7 +76,8 @@ def repo_bare_init():
 def repo_clone():
     get_auth()
     repo_bare_init()
-    process(arg_list[2],"pull",get_pull_data,process_pull_data)
+    header_add={"user":user_name,"passwd":passwd}
+    process(arg_list[2],"pull",get_pull_data,process_pull_data,header_add)
 
 def repo_commit():
     repo.commit(arg_list[1])
@@ -88,7 +89,8 @@ def repo_delete():
     repo.delete()
 
 def get_push_data():
-    need_list_str=process(arg_list[1],"get_need",get_pull_data,None)
+    header_add={"user":user_name,"passwd":passwd}
+    need_list_str=process(arg_list[1],"get_need",get_pull_data,None,header_add)
     if need_list_str != "":
         need_list=loads(need_list_str)
     else:
@@ -104,7 +106,7 @@ def get_pull_data():
     list_commit_child_ids=[]
     for result in db.commits.find({ },{ 'uid': 1, 'child_ids':1, '_id':0 }):
         list_commit_uids.append(result["uid"])
-        list_commit_child_ids.append(result["child_ids"])
+        list_commit_child_ids.append(str(result["child_ids"]))
     
     return dumps({"uid_list":list_commit_uids,"child_ids_list":list_commit_child_ids})
 
