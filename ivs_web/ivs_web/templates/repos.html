@@ -1,0 +1,29 @@
+{% extends "base2.html" %}
+
+{% block content %}
+
+<style>
+table th, td {
+	border: 1px solid black;
+	border-collapse: collapse;
+}
+th, td {
+	padding: 5px;
+}
+</style>
+
+
+<h1>Repositories</h1>
+<table style="width:100%">
+	<tr>
+		<th>Name</th>
+	</tr>
+{% for x in repos %}
+	<tr>
+	<td><a href="../files?db={{x}}">{{ x}}</a> </td>
+<!--	<td> {{ x.path }} </td>   -->
+	</tr>
+{% endfor %}
+</table>
+
+{% endblock %}

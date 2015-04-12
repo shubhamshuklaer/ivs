@@ -9,7 +9,7 @@ urlpatterns = patterns('',
     # url(r'^blog/', include('blog.urls')),
 
     url(r'^admin/', include(admin.site.urls)),
-	url(r'^login/','django.contrib.auth.views.login',name='login'),
+#	url(r'^login/','django.contrib.auth.views.login',name='login'),
 	url(r'^admin/',include(admin.site.urls)),
 	url(r'^files/','files.views.index',name='files'),
 	url(r'^branches/','branches.views.index',name='files'),
@@ -18,9 +18,11 @@ urlpatterns = patterns('',
 	url(r'^patches/','patches.views.index',name='patches'),
 	url(r'^main/','main.views.index',name='main'),
 
-	url(r'^login/$', 'django.contrib.auth.views.login',name='login'),
-    	url(r'^accounts/login/$', 'django.contrib.auth.views.login',name='login'),
-    	url(r'^accounts/files/$', 'files.views.index',name='files'),
+#	url(r'^login/$', 'django.contrib.auth.views.login',name='login'),
+#    	url(r'^accounts/login/$', 'django.contrib.auth.views.login',name='login'),
+  #  	url(r'^accounts/login/$', 'login.views.index',name='login'),
+	url(r'^login/auth$', 'login.views.auth',name='login'),
+    	url(r'^login/$', 'login.views.index',name='login'),
    
 
 
