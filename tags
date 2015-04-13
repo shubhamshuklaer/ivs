@@ -46,8 +46,9 @@ _real_handle_request_noblock	PooledProcessMixIn.py	/^    def _real_handle_reques
 _thread_loop	PooledProcessMixIn.py	/^    def _thread_loop(self):$/;"	m	class:PooledProcessMixIn
 add	ivs_base.py	/^	def add(self, path):$/;"	m	class:ivs
 add	ref/mongodb.py	/^	def add(self, path):$/;"	m	class:ivs
-add_perm_for	ivs	/^                add_perm_for=raw_input("Add permission for(give username) : ")$/;"	v
+add_perm_for_user	ivs	/^            add_perm_for_user=raw_input("Add permission for(give username) : ")$/;"	v
 application	ivs_web/ivs_web/wsgi.py	/^application = get_wsgi_application()$/;"	v
+apply_data	apply_data.py	/^def apply_data(db_name,data,root_path):$/;"	f
 checkout	ivs_base.py	/^	def checkout(self, branch):$/;"	m	class:ivs
 commit	ivs_base.py	/^	def commit(self, msg):$/;"	m	class:ivs
 commit	ref/mongodb.py	/^	def commit(self, msg):$/;"	m	class:ivs
@@ -110,8 +111,8 @@ get_path	ref/mongodb.py	/^	def get_path(self):$/;"	m	class:ivs
 get_pull_data	ivs	/^def get_pull_data():$/;"	f
 get_push_data	ivs	/^def get_push_data():$/;"	f
 get_repo_root	ivs	/^def get_repo_root():$/;"	f
-header_add	ivs	/^                header_add={"user":user_name,"passwd":passwd,"add_perm_for":add_perm_for}$/;"	v
-header_add	ivs	/^                header_add={"user":user_name,"passwd":passwd,"new_repo":arg_list[2]}$/;"	v
+header_add	ivs	/^            header_add={"user":user_name,"passwd":passwd,"add_perm_for_user":add_perm_for_user}$/;"	v
+header_add	ivs	/^            header_add={"user":user_name,"passwd":passwd,"new_repo":new_repo_name,"db_name":new_db_name}$/;"	v
 header_add	ivs	/^            header_add={"user":user_name,"passwd":passwd}$/;"	v
 header_add	ivs	/^        header_add={"user":user_name,"passwd":passwd}$/;"	v
 http_server	http_server.py	/^class http_server(PooledProcessMixIn,HTTPServer):$/;"	c
@@ -144,6 +145,8 @@ match_bitap	diff_match_patch.py	/^  def match_bitap(self, text, pattern, loc):$/
 match_bitapScore	diff_match_patch.py	/^    def match_bitapScore(e, x):$/;"	f	function:diff_match_patch.match_bitap
 match_main	diff_match_patch.py	/^  def match_main(self, text, pattern, loc):$/;"	m	class:diff_match_patch
 mongo_client	ivs	/^mongo_client=None$/;"	v
+new_db_name	ivs	/^            new_db_name=new_repo_name$/;"	v
+new_repo_name	ivs	/^            new_repo_name=raw_input("Enter new repo name : ")$/;"	v
 one_arg_args	ivs	/^one_arg_args=["status","delete","log"]$/;"	v
 passwd	ivs	/^passwd=""$/;"	v
 patch_addContext	diff_match_patch.py	/^  def patch_addContext(self, patch, text):$/;"	m	class:diff_match_patch
@@ -158,10 +161,12 @@ patch_toText	diff_match_patch.py	/^  def patch_toText(self, patches):$/;"	m	clas
 path_to_commit	ivs_base.py	/^	def path_to_commit(self, cid):$/;"	m	class:ivs
 pool_shutdown	PooledProcessMixIn.py	/^    def pool_shutdown(self):$/;"	m	class:PooledProcessMixIn
 process	ivs	/^def process(repo,action,get_data_func,process_data_func,header_add=None):$/;"	f
+process_add_perm	ivs	/^def process_add_perm(data):$/;"	f
 process_add_user	ivs	/^def process_add_user(data):$/;"	f
 process_pull_data	ivs	/^def process_pull_data(data):$/;"	f
 process_push_data	ivs	/^def process_push_data(data):$/;"	f
 process_serv_create	ivs	/^def process_serv_create(data):$/;"	f
+process_serv_del	ivs	/^def process_serv_del(data):$/;"	f
 remove	ivs_base.py	/^	def remove(self, path):$/;"	m	class:ivs
 repo	ivs	/^repo=ivs()$/;"	v
 repo	ref/mongodb.py	/^	repo = ivs()$/;"	v	class:ivs
@@ -199,9 +204,9 @@ show	ref/mongodb.py	/^	def show(self, col, name):$/;"	m	class:ivs
 shutdown	PooledProcessMixIn.py	/^    def shutdown(self):$/;"	m	class:PooledProcessMixIn
 status	ivs_base.py	/^	def status(self):$/;"	m	class:ivs
 status	ref/mongodb.py	/^	def status(self):$/;"	m	class:ivs
-three_arg_args	ivs	/^three_arg_args=["clone","serv_create"]$/;"	v
+three_arg_args	ivs	/^three_arg_args=["clone"]$/;"	v
 tree	ivs_base.py	/^	def tree(self, level = 0):$/;"	m	class:ivs
-two_arg_args	ivs	/^two_arg_args=["init","bare_init","add","push","pull","commit","rm","branch","chkout","rollback","user_add","add_perm"]$/;"	v
+two_arg_args	ivs	/^two_arg_args=["init","bare_init","add","push","pull","commit","rm","branch","chkout","rollback","user_add","add_perm","serv_del","serv_create"]$/;"	v
 update	ivs_base.py	/^	def update(self):$/;"	m	class:ivs
 update	ref/mongodb.py	/^	def update(self):$/;"	m	class:ivs
 urlpatterns	ivs_web/ivs_web/urls.py	/^urlpatterns = patterns('',$/;"	v

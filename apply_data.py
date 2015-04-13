@@ -70,32 +70,33 @@ def apply_data(db_name,data,root_path):
                 upsert=True
                 )
 
-    if len(commits_list)>0 and param_entry !=None:
-        db.params.update({"path":root_path},
-                {
-                        "path": root_path,
-                        "dbname": db_name,
-                        "first_cid": param_entry["first_cid"],
-                        "cur_com_num": param_entry["cur_com_num"],
-                        "last_cid": param_entry["last_cid"],
-                        "cur_com_level": param_entry["cur_com_level"],
-                        "cur_branch": param_entry["cur_branch"],
-                        "cur_patch_num": param_entry["cur_patch_num"],
-                    },
-                upsert=True
-                )
+    if len(commits_list)>0:
+        print("Generating code")
+        repo=ivs()
+        repo.set_path(root_path)
+        repo.set_dbname(db_name)
+        repo.load_params()
+        if repo.cur_branch == None:
+            repo.cur_branch="master"
 
-    repo=ivs()
-    repo.set_path(root_path)
-    repo.set_dbname(db_name)
-    repo.load_params()
-    param = repo.params.find_one({"path": root_path})
-    if param==None or repo.cur_branch == None:
-        cur_branch="master"
-    else:
-        cur_branch=repo.cur_branch
+        if param_entry!=None:
+            db.params.update({"path":root_path},
+                    {
+                            "path": root_path,
+                            "dbname": db_name,
+                            "first_cid": param_entry["first_cid"],
+                            "cur_com_num": param_entry["cur_com_num"],
+                            "last_cid": param_entry["last_cid"],
+                            "cur_com_level": param_entry["cur_com_level"],
+                            "cur_branch": repo.cur_branch,
+                            "cur_patch_num": param_entry["cur_patch_num"],
+                        },
+                    upsert=True
+                    )
 
-    cur_branch_obj=db.branches.find_one({"name":cur_branch})
-    if cur_branch_obj !=None:
-        head_commit_id=cur_branch_obj["head"]
-        repo.rollback(head_commit_id)
+        param = repo.params.find_one({"path": root_path})
+
+        cur_branch_obj=db.branches.find_one({"name":repo.cur_branch})
+        if cur_branch_obj !=None:
+            head_commit_id=cur_branch_obj["head"]
+            repo.rollback(head_commit_id)

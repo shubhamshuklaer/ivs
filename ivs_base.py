@@ -18,7 +18,26 @@ import string
 
 class ivs:
 	def __init__(self):
-		pass
+		self.conn=None
+		self.db=None
+		self.files =None
+		self.commits =None
+		self.staged =None
+		self.params =None
+		self.patches =None
+		self.branches =None
+		self.ivs =None
+		self.dbname =None
+		self.first_cid =None
+		self.cur_com_num =None
+		self.last_cid =None
+		self.cur_com_level =None
+		self.cur_branch =None
+		self.cur_patch_num =None
+		self.dmp =None
+		self.patch_obj =None
+		self.path=None
+		self.db_name=None
 
 	def set_path(self, path):
 		self.path = path
@@ -656,7 +675,7 @@ class ivs:
 			return
 		# print "Rolling back to : " + str(cid)
 		files_to_delete = set()
-                files_content_dict=dict()
+		files_content_dict=dict()
 		for com_id in path:
 			commit = self.commits.find_one({"uid": com_id})
 			for f in commit["added"]:
@@ -687,18 +706,18 @@ class ivs:
 				patch_obj.fill_dict(patch_dict)
 
 				file_path = mongo_patch["file_path"]
-                                if file_path not in files_content_dict:
-                                    files_content_dict[file_path]=[]
+				if file_path not in files_content_dict:
+					files_content_dict[file_path]=[]
 
 				files_content_dict[file_path].append(patch_obj)	
 
 
-                for file_path in files_content_dict:
-                    recover_text = self.dmp.patch_apply(files_content_dict[file_path], "")[0]
-                    #print("recover text for file "+file_path+" : " + recover_text)
-                    fp = open(self.get_full_path(file_path),'w')
-                    fp.write(recover_text)
-                    fp.close()
+		for file_path in files_content_dict:
+			recover_text = self.dmp.patch_apply(files_content_dict[file_path], "")[0]
+			#print("recover text for file "+file_path+" : " + recover_text)
+			fp = open(self.get_full_path(file_path),'w')
+			fp.write(recover_text)
+			fp.close()
 
 		for file_path in files_to_delete:
 			os.unlink(os.path.join(self.path, file_path))
@@ -738,10 +757,9 @@ class ivs:
 		patch_ids = entry["patch_ids"]
 		parent_branches=[]
 		temp_cur=self.branches.find_one({"name": self.get_cur_branch()})#["parent_branches"]
-		parent_branches = parent_branches + []
+		parent_branches = parent_branches + temp_cur["parent_branches"]
 		parent_branches.append(self.get_cur_branch())
 		# print patch_ids
-		patch_obj_arr = []
 		if(patch_ids !=None and len(patch_ids) > 0):
 			# print len(patch_ids)
 			# for patch_id in patch_ids:
@@ -749,11 +767,12 @@ class ivs:
 
 			# mongo_patch = self.patches.find_one({"uid": patch_id})
 			mongo_patch_cur = self.patches.find({"uid":{'$in': patch_ids}})
+			files_content=None
+			patch_obj_arr=[]
 			
 			if mongo_patch_cur.count() < 1:
 				pass
 			else:
-
 				for mongo_patch in mongo_patch_cur:
 					if not mongo_patch["branch"] in parent_branches:
 						continue
@@ -768,7 +787,7 @@ class ivs:
 
 					patch_obj=dmp_module.patch_obj()
 					patch_obj.fill_dict(patch_dict)
-					patch_obj_arr.append(patch_obj)	
+					patch_obj_arr.append(patch_obj)
 
 				recover_text = self.dmp.patch_apply(patch_obj_arr, "")[0]
 
