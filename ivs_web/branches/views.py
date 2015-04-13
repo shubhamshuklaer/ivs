@@ -12,34 +12,33 @@ from django.contrib.auth import authenticate , logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import *
+from django.conf import settings
 
 import pymongo as pm
 
 
 # Create your views here.
 
-@login_required
 def index(request):
 	out= []    # this will be sent to page for output
 	client = pm.MongoClient()
-	try:
-		settings.user_name 
-	except:
-		return redirect('login.views.index')
+	if 'username' not in request.session.keys() or request.session['username']=='':
+		print 'Redirecting to login'
+		return HttpResponseRedirect('../login') 
 
 	conn=pm.Connection()
-        db_users=conn["users"]
+	if 'db' not in request.session.keys() or request.session['db']=='':
+		return HttpResponseRedirect('/repo')
+        db=conn[request.session['db']]
 	# set the value of the db
 
 	if 'db' in request.GET.keys() :
-		db= client[request.GET['db']]
-	else:
-		a = db_users.users.find_one( {'user_name':settings.user_name } )
-		return render( request , 'repos.html', {'repos':a['repo'] } )
+		print 'Database is : ' + request.GET['db']	
+		db= conn[request.GET['db']]
+	#	return render( request , 'repos.html', {'repos':a['repo'] } )
         branches = db.branches.find()
 	for x in branches:
 		out.append( { 'name':x['name'] , 'parent':x['parent_branches'] } )
-        print files
         return render( request , 'branches.html', { 'branches': out } )
 
 

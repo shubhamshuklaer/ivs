@@ -18,16 +18,51 @@ import pymongo as pm
 
 # Create your views here.
 
-@login_required
 def index(request):
 	out= []    # this will be sent to page for output
 	client = pm.MongoClient()
-	db = client['test_ivs']
+
+	if 'username' not in request.session.keys() or request.session['username']=='':
+		print 'Redirecting to login'
+		return HttpResponseRedirect('../login') 
+
+	conn=pm.Connection()
+	if 'db' not in request.session.keys() or request.session['db']=='':
+		return HttpResponseRedirect('/repo')
+        db=conn[request.session['db']]
+	# set the value of the db
+
 	commits = db.commits.find()
 	for x in commits:
 		out.append( { 'id':str(x['_id']) , 'parent_id':str(x['parent_id']), 'added':x['added'] , 'deleted':x['deleted'], 'level':x['level'], 'ts':x['ts'], 'branch':x['branch'], 'msg':x['msg'], 'child_ids': [ str(k) for k in x['child_ids'] ]  } )
 
 	return render( request , 'commits.html', { 'commits': out } )
+
+
+
+'''
+def index(request):
+	out= []    # this will be sent to page for output
+	client = pm.MongoClient()
+	if 'username' not in request.session.keys() or request.session['username']=='':
+		print 'Redirecting to login'
+		return HttpResponseRedirect('../login') 
+
+	conn=pm.Connection()
+	if 'db' not in request.session.keys() or request.session['db']=='':
+		return HttpResponseRedirect('/repo')
+        db=conn[request.session['db']]
+	# set the value of the db
+
+	if 'db' in request.GET.keys() :
+		print 'Database is : ' + request.GET['db']	
+		db= conn[request.GET['db']]
+	#	return render( request , 'repos.html', {'repos':a['repo'] } )
+        branches = db.branches.find()
+	for x in branches:
+		out.append( { 'name':x['name'] , 'parent':x['parent_branches'] } )
+        return render( request , 'branches.html', { 'branches': out } )
+'''
 
 
 

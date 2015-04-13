@@ -26,7 +26,7 @@ def index(request):
 	db_users=conn['users']
 	if request.POST.get('username','')!='' and request.POST.get('password','')!='' :
 		db_users.users.insert( { 'user_name': request.POST.get('username','') , 'passwd': request.POST.get('password',''), 'repo': [] } )
-		return HttpResponse(  'login'  )
+		return HttpResponseRedirect(  '../login'  )
 	else:
 		return render( request, 'register.html' )
 	
