@@ -12,22 +12,23 @@ th, td {
 }
 </style>
 
-<a href="?up=true"><h3>Up</h3></a>
-<h1>Folders</h1> 
-<table style="width:100%">
+<a href="?up=true"><h3 align="center">Up</h3></a>
+<h1 align="center">Folders</h1> 
+<!--<table style="width:100%"> -->
+<table align="center" style="width:50%" >
 	<tr>
-		<th>Name</th>
+		<th align="center">Name</th>
 	</tr>
 {% for x in folders %}
 	<tr>
-	<td><a href="?folder={{x}}"> {{ x }} </a> </td>
+	<td align="center"><a href="?folder={{x}}"> {{ x }} </a> </td>
 	</tr>
 {% endfor %}
 </table>
 
 
-<h1>Files</h1>
-<table style="width:100%">
+<h1 align="center">Files</h1>
+<table align="center" style="width:50%">
 	<tr>
 		<th>Name</th>
 		<th>Path</th>

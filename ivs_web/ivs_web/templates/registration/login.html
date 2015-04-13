@@ -2,7 +2,7 @@
 
 {% block content %}
 
-<p> New to IVS . <a href="../register">Register here</a> </p>
+<p align="right"> New to IVS . <a href="../register">Register here</a> </p>
 
 {% if auth_failure %}
 <p>Your username and password didn't match. Please try again.</p>
@@ -10,7 +10,7 @@
 
 <form method="post" action="auth">
 {% csrf_token %}
-<table>
+<table align="center">
 <tr>
     <td>Username:</td>
     <td><input type="text" name="username">  </td>
@@ -19,9 +19,13 @@
     <td>Password</td>
     <td><input type="text" name="password"></td>
 </tr>
+</tr>
+	<td>
+		<input type="submit" value="Submit" />
+	</td>
+</tr>
 </table>
 
-<input type="submit" value="Submit" />
 <input type="hidden" name="next" value="../files" /> 
 <!--<input type="hidden" name="next" value="{{ next }}" /> --!>
 </form>

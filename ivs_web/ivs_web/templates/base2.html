@@ -3,6 +3,7 @@
 		<title> This is the title</title>
 	</head>
 	<body>
+	<h1 align="center"> Welcome to IVS ( IITG Versioning System ) </h1>
 	{% if user.is_authenticated %}
 <!--		<a href="/logout">Logout</a>
 		<a href= "/user_info">My Information</a>
@@ -22,8 +23,11 @@
 	<a href="/logout">Logout</a>
 
 	{% block content %}{% endblock %}
-		<footer>
-			<p>Created by: Kunal Khandelwal, Shubham Shukla,  Vibhanshu </p>
-		</footer>
+
+		<div style="position: relative; text-align: center">
+     			 <p style="position: fixed; bottom: 0; width:100%;"> Created by: Kunal Khandelwal , Shubham Shukla, Vibhanshu</p>
+  		</div>
+
+
 	</body>
 </html>
