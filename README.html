@@ -21,4 +21,8 @@ Host: www.somesite
 </code></pre>
 
 <p>(again you need to press enter twice)</p></li>
+<li><p>Generatign self signed cert</p>
+
+<pre><code>openssl req -x509 -newkey rsa:2048 -keyout server.pem -out server.pem -days XXX -nodes
+</code></pre></li>
 </ol>
