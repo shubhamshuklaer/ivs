@@ -35,11 +35,14 @@ def logout(request):
 	return HttpResponseRedirect('/login')
 	
 def repo(request):
+	if 'username' not in request.session.keys() or request.session['username']=='': # user not logged in
+		return HttpResponseRedirect('/login')
 	conn=pm.Connection()
 	db_users=conn["users"]
 	a = db_users.users.find_one( {'user_name':request.session['username'] } )
 	print a['repo']
 	request.session['prefix']=''
+	request.session['db']=''
 	return render( request, 'repos.html', {'repos': a['repo'] } )
 	
 	
@@ -48,6 +51,7 @@ def repo(request):
 def auth(request):
 #	print request.POST.get('username','')
 #	print request.POST.get('password','')
+	request.session['db']=''
 
 	conn=pm.Connection()
 	db_users=conn["users"]

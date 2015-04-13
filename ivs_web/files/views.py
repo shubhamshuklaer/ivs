@@ -27,6 +27,12 @@ def index(request):
 #	print request.GET['db']  + ' A key was found '
 #	print request.GET.db+ '   This is the name of the db  '
        # db = client[request.GET.db]
+	print '----------------------------------------'
+	print 'Username : '+request.session['username']
+	print 'repo   : ' +request.session['db']
+	print '----------------------------------------'
+
+	
 	if 'username' not in request.session.keys() or request.session['username']==0 :
 		return HttpResponseRedirect('login')
 	try:
@@ -46,9 +52,17 @@ def index(request):
 	else:
 		if request.session['db'] == '' :
 			a = db_users.users.find_one( {'user_name':settings.user_name } )
-			return render( request , 'repos.html', {'repos':a['repo'] } )
+			#return render( request , 'repos.html', {'repos':a['repo'] } )
+			return HttpResponseRedirect('../repo')
+	print 'The selected DB is : ' + request.session['db']
 	db= client[request.session['db']]
         files = db.files.find()
+	
+	print 'here'
+	if request.session['db']=='':   # i.e. no db selected
+		print 'here'
+		return HttpResponseRedirect('../repo')
+
         for x in files:
                 out.append( { 'name':x['name'] , 'path':x['path'] } )
 
