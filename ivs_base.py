@@ -331,7 +331,7 @@ class ivs:
 					
 					if(entry == None or len(entry) == 0):
 						self.files.insert({
-								"name": f, 
+								"name": str(os.path.relpath(os.path.join(root, f), self.path)), 
 								"path": str(os.path.relpath(os.path.join(root, f), self.path)), 
 								"staged": True, 
 								"staged_ts": os.path.getmtime(os.path.join(root, f)),
@@ -723,7 +723,8 @@ class ivs:
 			os.unlink(os.path.join(self.path, file_path))
 		self.last_cid = cid
 		self.cur_com_level = com["level"]
-		self.delete_tree(cid)
+		self.make_files_db(cid)
+		#self.delete_tree(cid)
 
 	def delete_tree(self, cid):
 		child_ids = self.commits.find_one({"uid": cid})["child_ids"]
@@ -867,3 +868,60 @@ class ivs:
 	    if float(len(t))/float(len(s)) > 0.30:
 	        return False
 	    return True
+
+
+	def make_files_db(self,cid):
+		files_collection=dict()
+		self.load_params()
+		path=self.path_to_commit(cid)
+		patch_ids=[]
+		delete_collection=dict()
+
+		for cid in path:
+			commit = self.commits.find_one({"uid": cid})
+			patch_ids=commit["patch_ids"]
+			for path in commit["added"]:
+				if path not in files_collection:
+					files_collection[path]=self.create_file_entry(path)
+					delete_collection[path]=False
+				files_collection[path]["added_cids"].append(cid)
+				delete_collection[path]=False
+				
+			for path in commit["deleted"]:
+				if path not in files_collection:
+					files_collection[path]=self.create_file_entry(path)
+					delete_collection[path]=False
+				files_collection[path]["deleted_cids"].append(cid)
+				delete_collection[path]=True
+
+			for patch in self.patches.find({"uid" :{"$in":patch_ids}}):
+				if patch["file_path"] not in files_collection:
+					files_collection[path]=self.create_file_entry(path)
+					delete_collection[path]=False
+
+				files_collection[patch["file_path"]]["patch_ids"].append(patch["uid"])
+
+
+		self.db.drop_collection("files")
+		self.files=self.db.files
+		for key in files_collection:
+			if not delete_collection[key]:
+				self.files.insert(files_collection[key])
+
+
+						
+
+
+	def create_file_entry(self,path):
+		return {
+			"name": path, 
+			"path": path,
+			"staged": False, 
+			"staged_ts": os.path.getmtime(os.path.join(self.path,path)),
+			"patch_ids": [],
+			"is_present": True,
+			"to_remove": False,
+			"to_add": False,
+			"added_cids": [],
+			"deleted_cids": []
+			}

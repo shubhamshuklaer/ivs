@@ -86,7 +86,7 @@ def apply_data(db_name,data,root_path):
                             "dbname": db_name,
                             "first_cid": param_entry["first_cid"],
                             "cur_com_num": param_entry["cur_com_num"],
-                            "last_cid": param_entry["last_cid"],
+                            "last_cid": db.branches.find_one({"name":repo.cur_branch})["head"],
                             "cur_com_level": param_entry["cur_com_level"],
                             "cur_branch": repo.cur_branch,
                             "cur_patch_num": param_entry["cur_patch_num"],
