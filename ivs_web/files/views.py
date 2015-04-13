@@ -27,6 +27,8 @@ def index(request):
 #	print request.GET['db']  + ' A key was found '
 #	print request.GET.db+ '   This is the name of the db  '
        # db = client[request.GET.db]
+	if 'username' not in request.session.keys() or request.session['username']==0 :
+		return HttpResponseRedirect('login')
 	try:
 		settings.user_name 
 	except:

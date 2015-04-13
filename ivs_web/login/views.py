@@ -25,6 +25,25 @@ import pymongo as pm
 def index(request):
 	return render( request , 'registration/login.html', { 'auth_failure':False } )
 
+def home(request):
+	return HttpResponseRedirect('login')
+
+def logout(request):
+	print 'Logging out'
+	request.session['prefix']=''
+	request.session['username']=''
+	return HttpResponseRedirect('/login')
+	
+def repo(request):
+	conn=pm.Connection()
+	db_users=conn["users"]
+	a = db_users.users.find_one( {'user_name':request.session['username'] } )
+	print a['repo']
+	request.session['prefix']=''
+	return render( request, 'repos.html', {'repos': a['repo'] } )
+	
+	
+	
 
 def auth(request):
 #	print request.POST.get('username','')
@@ -40,5 +59,6 @@ def auth(request):
 			settings.user_name = request.POST.get('username','')   # the currently logged in username
 			print a['repo']
 			request.session['prefix']=''
+			request.session['username']=settings.user_name
 			return render( request, 'repos.html', {'repos': a['repo'] } )
 		return render( request, 'registration/login.html' , {'auth_failure':True } )

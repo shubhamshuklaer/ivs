@@ -23,7 +23,10 @@ urlpatterns = patterns('',
   #  	url(r'^accounts/login/$', 'login.views.index',name='login'),
 	url(r'^login/auth$', 'login.views.auth',name='login1'),
     	url(r'^login/$', 'login.views.index',name='login1'),
+	url(r'^logout/$', 'login.views.logout',name='logout'),
 	url(r'^register/$', 'register.views.index',name='register'),
+	url(r'^repo/$', 'login.views.repo' , name='repo' ),
+    	url(r'^$', 'login.views.home',name='login1'),
    
 
 
