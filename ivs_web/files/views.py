@@ -27,11 +27,6 @@ def index(request):
 #	print request.GET['db']  + ' A key was found '
 #	print request.GET.db+ '   This is the name of the db  '
        # db = client[request.GET.db]
-	print '----------------------------------------'
-	print 'Username : '+request.session['username']
-	print 'repo   : ' +request.session['db']
-	print '----------------------------------------'
-
 	
 	if 'username' not in request.session.keys() or request.session['username']==0 :
 		return HttpResponseRedirect('login')
@@ -79,12 +74,10 @@ def index(request):
 
 	if 'up' in request.GET.keys():
 		sp = prefix.split('/')
-		print sp
 		prefix = '/'.join(sp[:-2])
 		if prefix!='':
 			prefix=prefix+'/'
 		request.session['prefix']=prefix
-		print sp
 		
 
 	print 'The prefix is : ' + prefix
