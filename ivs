@@ -1,5 +1,6 @@
 #!/usr/bin/python
 import httplib
+from bson.objectid import ObjectId
 import sys
 import getopt
 from urlparse import urlparse
@@ -10,7 +11,9 @@ import os
 import os.path
 from pymongo import Connection
 from get_data_for_commits import get_data_for_commits
+from apply_data import apply_data
 from bson.json_util import dumps,loads
+import requests
 
 user_name=""
 passwd=""
@@ -75,7 +78,8 @@ def repo_bare_init():
 def repo_clone():
     get_auth()
     repo_bare_init()
-    process(arg_list[2],"pull",get_pull_data,process_pull_data)
+    header_add={"user":user_name,"passwd":passwd}
+    process(arg_list[2],"pull",get_pull_data,process_pull_data,header_add)
 
 def repo_commit():
     repo.commit(arg_list[1])
@@ -87,9 +91,13 @@ def repo_delete():
     repo.delete()
 
 def get_push_data():
-    need_list_str=process(arg_list[1],"get_need",get_pull_data,None)
+    header_add={"user":user_name,"passwd":passwd}
+    need_list_str=process(arg_list[1],"get_need",get_pull_data,None,header_add)
     if need_list_str != "":
         need_list=loads(need_list_str)
+        if need_list=="s":
+            print("Pull first")
+            sys.exit(0)
     else:
         need_list=[]
     return get_data_for_commits(db_name,need_list)
@@ -100,27 +108,23 @@ def get_pull_data():
     mongo_client=Connection()
     db=mongo_client[db_name]
     list_commit_uids=[]
-    for result in db.commits.find({ },{ 'uid': 1, '_id':0 }):
+    list_commit_child_ids=[]
+    for result in db.commits.find({ },{ 'uid': 1, 'child_ids':1, '_id':0 }):
         list_commit_uids.append(result["uid"])
+        list_commit_child_ids.append(str(result["child_ids"]))
     
-    return dumps(list_commit_uids)
+    return dumps({"uid_list":list_commit_uids,"child_ids_list":list_commit_child_ids})
 
 
 def process_pull_data(data):
-    global mongo_client
-    global db
-    mongo_client=Connection()
-    db=mongo_client[db_name]
-
     data_list=loads(data)
     
-    print("Processing pull response"+str(data_list))
+    print("Processing pull response")
+    print(data_list)
+
+    apply_data(db_name,data_list,repo_root)
     
-    for entry in data_list["commits"]:
-        db.commits.insert(entry)
-    
-    for entry in data_list["patches"]:
-        db.patches.insert(entry)
+
     
 def process_push_data(data):
     print(data)
@@ -153,13 +157,18 @@ def process(repo,action,get_data_func,process_data_func,header_add=None):
 
     param={"path":remote_repo_location.path,"action":action,"message":message}
     body=urllib.urlencode(param)
-    conn=httplib.HTTPSConnection(remote_repo_location.netloc)
-    conn.request("POST","",body,header)
-    response=conn.getresponse()
-    print(response.status,response.reason)
+    #conn=httplib.HTTPSConnection(remote_repo_location.netloc)
+    #conn.request("POST","",body,header)
+    #conn=httplib.HTTPSConnection("http://shubham.shukla:r8Qddv1w@202.141.80.19",3128)
+    #conn.set_tunnel(remote_repo_location.netloc)
+    #conn.request("POST","",body,header)
+    #response=conn.getresponse()
+    os.environ['NO_PROXY'] = '127.0.0.1'
+    response=requests.post("https://"+remote_repo_location.netloc,headers=header,data=body,verify=False)
+    print(response.status_code)
     data=""
-    if response.status==200:
-        data=response.read()
+    if response.status_code==200:
+        data=response.text
 
         if process_data_func !=None:
             process_data_func(data)
@@ -198,6 +207,7 @@ for opt,arg in optlist:
         print("user_add remote_server")
         print("serv_create remote_server")
         print("serv_del remote_repo")
+        print("add_perm remote_repo")
         print("valid args "+str(valid_args))
         sys.exit(0)
 
@@ -272,7 +282,7 @@ if arg_list[0] in valid_args:
             elif arg_list[0] == "chkout":
                 repo.checkout(arg_list[1])
             elif arg_list[0] == "rollback":
-                repo.rollback(arg_list[1])
+                repo.rollback(ObjectId(arg_list[1]))
             elif arg_list[0] == "db":
                 repo_remove()
             elif arg_list[0] == "commit":

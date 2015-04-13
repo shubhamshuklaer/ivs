@@ -1,3 +1,6 @@
 *.swp
 *.pyc
-*.pem
+service_dir/
+tags
+test/
+
