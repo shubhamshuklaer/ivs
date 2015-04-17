@@ -40,11 +40,13 @@ def apply_data(db_name,data,root_path):
     for branch in branches_list:
         db.branches.update({"name":branch["name"]},
                 {
+                    "$set":{
 				"name": branch["name"],
 				"commit_ids": branch["commit_ids"],
 				"head": branch["head"],
 				"tail": branch["tail"],
 				"parent_branches": branch["parent_branches"],
+                        }
                     },
                 upsert=True
                 )
@@ -82,6 +84,7 @@ def apply_data(db_name,data,root_path):
         if param_entry!=None:
             db.params.update({"path":root_path},
                     {
+                        "$set"{
                             "path": root_path,
                             "dbname": db_name,
                             "first_cid": param_entry["first_cid"],
@@ -90,6 +93,7 @@ def apply_data(db_name,data,root_path):
                             "cur_com_level": param_entry["cur_com_level"],
                             "cur_branch": repo.cur_branch,
                             "cur_patch_num": param_entry["cur_patch_num"],
+                            }
                         },
                     upsert=True
                     )

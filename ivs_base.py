@@ -1,6 +1,6 @@
 #!/usr/bin/python
-
 from __future__ import division
+from abc import ABCMeta, abstractmethod
 from pymongo import Connection
 from pymongo import MongoClient
 from bson.objectid import ObjectId
@@ -14,10 +14,150 @@ import datetime
 import bson
 import json
 
+
 import string
 
+db_name_coll=None
+commits_coll=None
+branches_coll=None
+files_coll=None
+params_coll=None
+base_class=None
+
+
+class base_class:
+    __metaclass__ = ABCMeta
+
+    @abstractmethod
+    def insert(self,input_dict):
+        for key in input_dict:
+            setattr(self,key,input_dict[key])
+        self.put()
+
+    @staticmethod
+    def update_entity(entity,update_dict):
+        for key in update_dict:
+            if key == "$set":
+                for temp_key in update_dict[key]:
+                    setattr(entity,temp_key,update_dict[key][temp_key])
+            elif key == "$addToSet":
+                for temp_key in update_dict[key]:
+                    temp_list=getattr(entity,temp_key)
+                    temp_list=temp_list+update_dict[key][temp_key]
+                    setattr(entity,temp_key,temp_list)
+            elif key == "$pull":
+                for temp_key in update_dict[key]:
+                    temp_list=getattr(entity,temp_key)
+                    temp_list.remove(update_dict[key][temp_key])
+                    setattr(entity,temp_key,temp_list)
+            
+        entity.put()
+
+
+    @staticmethod
+    def update(class_name,search_dict,update_dict,upsert=False,multi=False):
+        for key in search_dict:
+            val=search_dict[key]
+            if type(val) is dict:
+                if "$in" in val:
+                    query=key+" IN "+val["$in"]
+            else:
+                query=key+" ="+val
+
+        matches=class_name.all().filter(query)
+
+        if len(matches)==0 and upsert:
+            temp_entity=class_name
+            temp_entity.insert(update_dict)
+        elif len(matches)>0:
+            if not multi:
+                match=matches[0]
+                update_entity(match,update_dict)
+            else:
+                for match in matches:
+                    update_entity(match,update_dict)
+
+
+
+
+def define_classes(server=False):
+    global db_name_coll
+    global commits_coll
+    global branches_coll
+    global files_coll
+    global params_coll
+
+    if server:
+        from google.appengine.ext import db
+        
+
+        class _db_name_coll(db.Model):
+            repo_path=db.StringProperty(required=True)
+            db_name=db.StringProperty(required=True)
+
+        class _commits_coll(db.Model):
+            uid=db.StringProperty(required=True)
+            patch_ids=db.StringListProperty(required=True)
+            ts=db.datetime(required=True)
+            msg=db.StringProperty(required=True)
+            added=db.StringListProperty(required=True)
+            deleted=db.StringListProperty(required=True)
+            parent_id=db.StringProperty(required=True)
+            branch=db.StringProperty(required=True)
+            child_ids=db.StringListProperty(required=True)
+            num=db.IntegerProperty(required=True)
+            level=db.IntegerProperty(required=True)
+
+        class _branches_coll(db.Model):
+            name=db.StringProperty(required=True)
+            commit_ids=db.StringListProperty(required=True)
+            head=db.StringProperty(required=True)
+            tail=db.StringProperty(required=True)
+            parent_branches=db.StringListProperty(required=True)
+
+        class _files_coll(db.Model):
+            name=db.StringProperty(required=True)
+            path=db.StringProperty(required=True)
+            staged=db.BooleanProperty(required=True)
+            staged_ts=db.datetime(required=True)
+            patch_ids=db.StringListProperty(required=True)
+            is_present=db.BooleanProperty(required=True)
+            to_remove=db.BooleanProperty(required=True)
+            to_add=db.BooleanProperty(required=True)
+            added_cids=db.StringListProperty(required=True)
+            deleted_cids=db.StringListProperty(required=True)
+
+        class _patches_coll(db.Model):
+            uid=db.StringProperty(required=True)
+            diff_dict=db.StringProperty(required=True)
+            num=db.IntegerProperty(required=True)
+            file_path=db.StringProperty(required=True)
+            cid=db.StringProperty(required=True)
+            branch=db.StringProperty(required=True)
+
+        class _params_coll(db.Model):
+            path=db.StringProperty(required=True)
+            dbname=db.StringProperty(required=True)
+            first_cid=db.StringProperty(required=True)
+            cur_com_num=db.IntegerProperty(required=True)
+            last_cid=db.StringProperty(required=True)
+            cur_com_level=db.StringProperty(required=True)
+            cur_branch=db.IntegerProperty(required=True)
+            cur_patch_num=db.IntegerProperty(required=True)
+
+    else:
+        pass
+
+
+    db_name_coll=_db_name_coll
+    commits_coll=_commits_coll
+    branches_coll=_branches_coll
+    files_coll=_files_coll
+    params_coll=_params_coll
+
+
 class ivs:
-	def __init__(self):
+	def __init__(self,_server=False):
 		self.conn=None
 		self.db=None
 		self.files =None
@@ -38,6 +178,8 @@ class ivs:
 		self.patch_obj =None
 		self.path=None
 		self.db_name=None
+                self.server=_server
+                define_classes(_server)
 
 	def set_uname(self,name):
 		self.name=name;
