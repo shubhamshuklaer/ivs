@@ -55,7 +55,6 @@ def get_repo_root():
 
 def set_repo_param():
     repo.set_path(repo_root)
-    repo.set_dbname(db_name)
 
 def get_db_name():
     global db_name

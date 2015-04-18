@@ -1,8 +1,5 @@
 #!/usr/bin/python
 from __future__ import division
-from abc import ABCMeta, abstractmethod
-from pymongo import Connection
-from pymongo import MongoClient
 from bson.objectid import ObjectId
 import os
 import shutil
@@ -23,138 +20,9 @@ branches_coll=None
 files_coll=None
 params_coll=None
 base_class=None
+mongo_db_name="ivs"
 
-
-class base_class:
-    __metaclass__ = ABCMeta
-
-    @abstractmethod
-    def insert(self,input_dict):
-        for key in input_dict:
-            setattr(self,key,input_dict[key])
-        self.put()
-
-    @staticmethod
-    def update_entity(entity,update_dict):
-        for key in update_dict:
-            if key == "$set":
-                for temp_key in update_dict[key]:
-                    setattr(entity,temp_key,update_dict[key][temp_key])
-            elif key == "$addToSet":
-                for temp_key in update_dict[key]:
-                    temp_list=getattr(entity,temp_key)
-                    temp_list=temp_list+update_dict[key][temp_key]
-                    setattr(entity,temp_key,temp_list)
-            elif key == "$pull":
-                for temp_key in update_dict[key]:
-                    temp_list=getattr(entity,temp_key)
-                    temp_list.remove(update_dict[key][temp_key])
-                    setattr(entity,temp_key,temp_list)
-            
-        entity.put()
-
-
-    @staticmethod
-    def update(class_name,search_dict,update_dict,upsert=False,multi=False):
-        for key in search_dict:
-            val=search_dict[key]
-            if type(val) is dict:
-                if "$in" in val:
-                    query=key+" IN "+val["$in"]
-            else:
-                query=key+" ="+val
-
-        matches=class_name.all().filter(query)
-
-        if len(matches)==0 and upsert:
-            temp_entity=class_name
-            temp_entity.insert(update_dict)
-        elif len(matches)>0:
-            if not multi:
-                match=matches[0]
-                update_entity(match,update_dict)
-            else:
-                for match in matches:
-                    update_entity(match,update_dict)
-
-
-
-
-def define_classes(server=False):
-    global db_name_coll
-    global commits_coll
-    global branches_coll
-    global files_coll
-    global params_coll
-
-    if server:
-        from google.appengine.ext import db
-        
-
-        class _db_name_coll(db.Model):
-            repo_path=db.StringProperty(required=True)
-            db_name=db.StringProperty(required=True)
-
-        class _commits_coll(db.Model):
-            uid=db.StringProperty(required=True)
-            patch_ids=db.StringListProperty(required=True)
-            ts=db.datetime(required=True)
-            msg=db.StringProperty(required=True)
-            added=db.StringListProperty(required=True)
-            deleted=db.StringListProperty(required=True)
-            parent_id=db.StringProperty(required=True)
-            branch=db.StringProperty(required=True)
-            child_ids=db.StringListProperty(required=True)
-            num=db.IntegerProperty(required=True)
-            level=db.IntegerProperty(required=True)
-
-        class _branches_coll(db.Model):
-            name=db.StringProperty(required=True)
-            commit_ids=db.StringListProperty(required=True)
-            head=db.StringProperty(required=True)
-            tail=db.StringProperty(required=True)
-            parent_branches=db.StringListProperty(required=True)
-
-        class _files_coll(db.Model):
-            name=db.StringProperty(required=True)
-            path=db.StringProperty(required=True)
-            staged=db.BooleanProperty(required=True)
-            staged_ts=db.datetime(required=True)
-            patch_ids=db.StringListProperty(required=True)
-            is_present=db.BooleanProperty(required=True)
-            to_remove=db.BooleanProperty(required=True)
-            to_add=db.BooleanProperty(required=True)
-            added_cids=db.StringListProperty(required=True)
-            deleted_cids=db.StringListProperty(required=True)
-
-        class _patches_coll(db.Model):
-            uid=db.StringProperty(required=True)
-            diff_dict=db.StringProperty(required=True)
-            num=db.IntegerProperty(required=True)
-            file_path=db.StringProperty(required=True)
-            cid=db.StringProperty(required=True)
-            branch=db.StringProperty(required=True)
-
-        class _params_coll(db.Model):
-            path=db.StringProperty(required=True)
-            dbname=db.StringProperty(required=True)
-            first_cid=db.StringProperty(required=True)
-            cur_com_num=db.IntegerProperty(required=True)
-            last_cid=db.StringProperty(required=True)
-            cur_com_level=db.StringProperty(required=True)
-            cur_branch=db.IntegerProperty(required=True)
-            cur_patch_num=db.IntegerProperty(required=True)
-
-    else:
-        pass
-
-
-    db_name_coll=_db_name_coll
-    commits_coll=_commits_coll
-    branches_coll=_branches_coll
-    files_coll=_files_coll
-    params_coll=_params_coll
-
+from define_classes import define_classes
 
 class ivs:
 	def __init__(self,_server=False):
@@ -177,7 +45,7 @@ class ivs:
 		self.dmp =None
 		self.patch_obj =None
 		self.path=None
-		self.db_name=None
+		self.db_name=mongo_db_name
                 self.server=_server
                 define_classes(_server)
 
@@ -205,11 +73,11 @@ class ivs:
 	def get_db(self):
 		return self.db
 
-	def get_dbname(self):
-		return self.dbname
+	# def get_dbname(self):
+		# return self.dbname
 
-	def set_dbname(self, name):
-		self.dbname = name
+	# def set_dbname(self, name):
+		# self.dbname = name
 
 	def get_next_com_num(self):
 		self.cur_com_num += 1
@@ -242,11 +110,14 @@ class ivs:
 		self.cur_com_level = num
 
 	def save_params(self):
-		param = self.params.find_one({"path": self.path})
+		param = base_class.find_one(params_coll,{
+                    "db_name": self.dbname,
+                    "path": self.path})
 		if(param == None):
-			self.params.insert({
+                        temp_entity=params_coll()
+			base_class.insert(temp_entity,params_coll,{
 				"path": self.path,
-				"dbname": self.dbname,
+				"db_name": self.dbname,
 	#			"uname": self.name,      # added the attributes
 				"first_cid": self.first_cid,
 				"cur_com_num": self.cur_com_num,
@@ -257,12 +128,13 @@ class ivs:
 				}
 			)
 		else:
-			self.params.update({
+			base_class.update(params_coll,{
+                                        "db_name": self.dbname,
 					"path": self.path
 				},{
 					'$set': {
 						"path": self.path,
-						"dbname": self.dbname,
+						"db_name": self.dbname,
 		#				"uname": self.name,       # added the attributes
 						"first_cid": self.first_cid,
 						"cur_com_num": self.cur_com_num,
@@ -287,11 +159,13 @@ class ivs:
 		self.branches = self.db.branches
 		self.ivs = self.db.ivs
 
-		param = self.params.find_one({"path": self.path})
+		param = base_class.find_one(params_coll,{
+                    "db_name": self.dbname,
+                    "path": self.path})
 		if(param == None or len(param) == 0):
 			pass
 		else:
-			self.dbname = param["dbname"]
+			self.dbname = param["db_name"]
 			self.first_cid = param["first_cid"]
 			self.cur_com_num = param["cur_com_num"]
 			self.last_cid = param["last_cid"]
@@ -331,8 +205,10 @@ class ivs:
 			self.cur_branch = "master"
 			tmp_id = ObjectId()
                         if not server:
-                            commit_id = self.commits.insert({
+                            temp_entity=commits_coll()
+                            base_class.insert(temp_entity,commits_coll,{
                                 "uid":  tmp_id,
+                                "db_name": self.dbname,
                                 "patch_ids": [],
                                 "ts": time.time(),
                                 "msg": "Initial Commit on master",
@@ -345,9 +221,11 @@ class ivs:
                                 "level": 1
                                 }
                                 )
-                            self.branches.insert({
+                            temp_entity=branches_coll()
+                            base_class.insert(temp_entity,branches_coll,{
                                 "name": "master",
                                 "commit_ids": [],
+                                "db_name": self.dbname,
                                 "head": tmp_id,
                                 "tail": tmp_id,
                                 "parent_branches": []
@@ -380,7 +258,7 @@ class ivs:
 		db_name_file.close()
 
 	def is_all_committed(self):
-		entries = self.files.find({"is_present": True})
+            entries = base_class.find(files_coll,{"db_name":self.dbname,"is_present": True})
 
 		for entry in entries:
 			if not os.path.exists(os.path.join(self.path, entry["path"])):
@@ -392,7 +270,7 @@ class ivs:
 
 	def restore_branch_data(self, branch):
 		print "Restoring data on branch : " + str(branch)
-		entry = self.branches.find_one({"name": branch})
+		entry = base_class.find_one(branches_coll,{"db_name":self.dbname,"name": branch})
 		self.rollback(entry["head"])
 
 	def checkout(self, branch):
@@ -401,7 +279,7 @@ class ivs:
 			print "Already on branch. Aborted"
 			return
 		self.load_params()
-		if(self.branches.find_one({"name": str(branch)}) == None):
+		if(base_class.find_one(branches_coll,{"db_name":self.dbname,"name": str(branch)}) == None):
 			print "Branch doesn't exists. Aborting"
 			return
 		if not self.is_all_committed():
@@ -411,23 +289,25 @@ class ivs:
 		print "\nChecking out : " + str(branch)
 		self.restore_branch_data(branch)
 		self.cur_branch = branch
-		branch = self.branches.find_one({"name": str(branch)})
+		branch = base_class.find_one(branches_coll,{"db_name":self.dbname,"name": str(branch)})
 		self.last_cid = branch["head"]
-		commit = self.commits.find_one	({"uid": self.last_cid})
+		commit = base_class.find_one	(commits_coll,{"db_name":self.dbname,"uid": self.last_cid})
 		self.cur_com_level = commit["level"]
 		self.save_params()
 	
 	def create_branch(self, branch):
 		self.load_params()
-		if(self.branches.find_one({"name": str(branch)}) != None):
+		if(base_class.find_one(branches_coll,{"db_name":self.dbname,"name": str(branch)}) != None):
 			print "Branch already exists. Aborting"
 			return
 
-		upstream_branches = self.branches.find_one({"name": self.get_cur_branch()})["parent_branches"]
+		upstream_branches = base_class.find_one(branches_coll,{"db_name":self.dbname,"name": self.get_cur_branch()})["parent_branches"]
 		upstream_branches.append(self.get_cur_branch())
-		self.branches.insert({
+                temp_entity=branches_coll()
+		base_class.insert(temp_entity,branches_coll,{
 			"name": str(branch),
 			"commit_ids": [],
+                        "db_name": self.dbname,
 			"tail": self.last_cid,
 			"head": self.last_cid,
 			"parent_branches": upstream_branches
@@ -435,11 +315,13 @@ class ivs:
 		)
 		
 		cid = ObjectId()
-		commit_id = self.commits.insert({
+                temp_entity=commits_coll()
+		base_class.insert(temp_entity,commits_coll,{
 			"uid":  cid,
 			"patch_ids": [],
 			"ts": time.time(),
 			"msg": "Initial Commit on "+str(branch),
+                        "db_name": self.dbname,
 			"added": [],
 			"deleted": [],
 			"parent_id": self.last_cid,
@@ -450,7 +332,8 @@ class ivs:
 
 			}
 		)
-		self.commits.update({
+		base_class.update(commits_coll,{
+                        "db_name": self.dbname,
 			"uid": self.last_cid
 			},{
 				'$addToSet': {
@@ -459,7 +342,8 @@ class ivs:
 			}
 		)
 		self.dec_com_level()
-		self.branches.update({
+		base_class.update(branches_coll,{
+                        "db_name": self.dbname,
 			"name": str(branch)
 			},{
 				'$set': {
@@ -479,15 +363,17 @@ class ivs:
 					if not self.istext(os.path.join(root, f)):
 						print str(os.path.relpath(os.path.join(root, f), self.path)) + " : File type not supported. Aborting"
 						continue
-					entry = self.files.find_one({"path": os.path.relpath(os.path.join(root, f), self.path)})
+					entry = base_class.find_one(files_coll,{"db_name":self.dbname,"path": os.path.relpath(os.path.join(root, f), self.path)})
 					
 					if(entry == None or len(entry) == 0):
-						self.files.insert({
+                                                temp_entity=files_coll()
+						base_class.insert(temp_entity,files_coll,{
 								"name": str(os.path.relpath(os.path.join(root, f), self.path)), 
 								"path": str(os.path.relpath(os.path.join(root, f), self.path)), 
 								"staged": True, 
 								"staged_ts": os.path.getmtime(os.path.join(root, f)),
 								"patch_ids": [],
+                                                                "db_name": self.dbname,
 								"is_present": True,
 								"to_remove": False,
 								"to_add": True,
@@ -498,7 +384,8 @@ class ivs:
 					else:
 						if not self.is_diff(entry):
 							continue
-						self.files.update({
+						base_class.update(files_coll,{
+                                                                "db_name": self.dbname,
 								"path": os.path.relpath(os.path.join(root, f), self.path)
 							},
 							{
@@ -514,16 +401,18 @@ class ivs:
 			print "Improper path. Aborting"
 			return	
 		else:
-			entry = self.files.find_one({"path": path})
+			entry = base_class.find_one(files_coll,{"db_name":self.dbname,"path": path})
 			if(entry == None or len(entry) == 0):
 
 				print "Staging new file: " + str(path)
-				self.files.insert({
+                                temp_entity=files_coll()
+				base_class.insert(temp_entity,files_coll,{
 						"name": os.path.basename(path), 
 						"path": str(path), 
 						"staged": True, 
 						"staged_ts": os.path.getmtime(os.path.join(self.path, path)),
 						"patch_ids": [],
+                                                "db_name": self.dbname,
 						"is_present": True,
 						"to_remove": False,
 						"to_add": True,
@@ -537,7 +426,8 @@ class ivs:
 					return
 				if self.is_diff(entry):
 					print "\nStaging modified file: " + str(path)
-					self.files.update({
+					base_class.update(files_coll,{
+                                                        "db_name": self.dbname,
 							"path": path
 						},
 						{ 
@@ -555,9 +445,10 @@ class ivs:
 	
 	def remove(self, path):
 		self.load_params()
-		entries = self.files.find({"path": path, "is_present": True})
+		entries = base_class.find(files_coll,{"db_name":self.dbname,"path": path, "is_present": True})
 		for entry in entries:
-			self.files.update({
+			base_class.update(files_coll,{
+                                        "db_name": self.dbname,
 					"path": entry["path"]
 				},
 				{ 
@@ -571,7 +462,7 @@ class ivs:
 	
 	def commit(self, msg):
 		self.load_params()
-		entries = self.files.find({"staged": True, "is_present": True})
+		entries = base_class.find(files_coll,{"db_name":self.dbname,"staged": True, "is_present": True})
 		# print entries.count()
 		if(entries.count() == 0):
 			print "Nothing to commit. Aborting"
@@ -579,9 +470,11 @@ class ivs:
 		else:
 			print "\nCommit"
 		cid = ObjectId()
-		commit_id = self.commits.insert({
+                temp_entity=commits_coll()
+		base_class.insert(temp_entity,commits_coll,{
 			"uid":  cid,
 			"patch_ids": [],
+                        "db_name": self.dbname,
 			"ts": time.time(),
 			"msg": msg,
 			"added": [],
@@ -593,7 +486,8 @@ class ivs:
 			"level": self.get_next_com_level()
 			}
 		)
-		self.branches.update({
+		base_class.update(branches_coll,{
+                                "db_name": self.dbname,
 				"name": self.cur_branch
 			},{
 				'$set': {
@@ -604,7 +498,8 @@ class ivs:
 		for entry in entries:
 			if entry["to_remove"] :
 				print "Removing : " + str(entry["path"])
-				self.files.update({
+				base_class.update(files_coll,{
+                                                "db_name": self.dbname,
 						"path": str(entry["path"])
 					},
 					{ 
@@ -620,7 +515,8 @@ class ivs:
 				
 				if(len(patches) > 0):
 					
-					self.commits.update({
+					base_class.update(commits_coll,{
+                                                "db_name": self.dbname,
 						"uid": self.last_cid
 						},{
 							'$addToSet': {
@@ -633,17 +529,20 @@ class ivs:
 					# print patches[0].patchs
 					for patch in patches:
 						pid = ObjectId()
-						self.patches.insert({
+                                                temp_entity=patches_coll()
+						base_class.insert(temp_entity,patches_coll,{
 							"uid": pid,
 							"dict": patch.patch_dict,
 							"num": self.get_next_patch_num(),
+                                                        "db_name": self.dbname,
 							"file_path": entry["path"],
 							"cid": cid,
 							"branch": self.get_cur_branch()
 							}
 						)
 
-						self.files.update({
+						base_class.update(files_coll,{
+                                                                "db_name": self.dbname,
 								"path": entry["path"]
 							},
 							{ 
@@ -659,7 +558,8 @@ class ivs:
 							} 
 						)
 
-						self.commits.update({
+						base_class.update(commits_coll,{
+                                                                "db_name": self.dbname,
 								"uid": cid
 							},
 							{
@@ -673,7 +573,8 @@ class ivs:
 
 			elif entry["to_add"]:
 				print "Adding : " + str(entry["path"])
-				self.files.update({
+				base_class.update(files_coll,{
+                                                "db_name": self.dbname,
 						"path": str(entry["path"])
 					},
 					{ 
@@ -689,7 +590,8 @@ class ivs:
 				patches = self.dmp.patch_make(tmp_txt, data.decode('utf-8'))
 				if(len(patches) > 0):
 					print "Committing : " + str(entry["path"])
-					self.commits.update({
+					base_class.update(commits_coll,{
+                                                "db_name": self.dbname,
 						"uid": self.last_cid
 						},{
 							'$addToSet': {
@@ -701,17 +603,20 @@ class ivs:
 					# print patches[0].patchs
 					for patch in patches:
 						pid = ObjectId()
-						self.patches.insert({
+                                                temp_entity=patches_coll()
+						base_class.insert(temp_entity,patches_coll,{
 							"uid": pid,
 							"dict": patch.patch_dict,
 							"num": self.get_next_patch_num(),
+                                                        "db_name": self.dbname,
 							"file_path": entry["path"],
 							"cid": cid,
 							"branch": self.get_cur_branch()
 							}
 						)
 						
-						self.files.update({
+						base_class.update(files_coll,{
+                                                                "db_name": self.dbname,
 								"path": entry["path"]
 							},
 							{ 
@@ -725,7 +630,8 @@ class ivs:
 								}
 							} 
 						)
-						self.commits.update({
+						base_class.update(commits_coll,{
+                                                                "db_name": self.dbname,
 								"uid": cid
 							},
 							{
@@ -738,7 +644,8 @@ class ivs:
 						)
 			else:
 				# print "Committing file " + str(entry["path"])
-				self.files.update({
+				base_class.update(files_coll,{
+                                                "db_name": self.dbname,
 						"path": str(entry["path"])
 					},
 					{ 
@@ -754,7 +661,8 @@ class ivs:
 				if(len(patches) > 0):
 					print "Committing : " + str(entry["path"])
 					
-					self.commits.update({
+					base_class.update(commits_coll,{
+                                                "db_name": self.dbname,
 						"uid": self.last_cid
 						},{
 							'$addToSet': {
@@ -766,18 +674,21 @@ class ivs:
 					# print patches[0].patchs
 					for patch in patches:
 						pid = ObjectId()
-                                                self.patches.insert({
+                                                temp_entity=patches_coll()
+                                                base_class.insert(temp_entity,patches_coll,{
                                                     "uid": pid,
                                                     "dict": patch.patch_dict,
                                                     "num": self.get_next_patch_num(),
                                                     "file_path": entry["path"],
+                                                    "db_name": self.dbname,
                                                     "cid": cid,
                                                     "branch": self.get_cur_branch()
                                                     }
                                                 )
 						
 						
-						self.files.update({
+						base_class.update(files_coll,{
+                                                                "db_name": self.dbname,
 								"path": entry["path"],
 								"is_present": True
 							},
@@ -791,7 +702,8 @@ class ivs:
 								}
 							} 
 						)
-						self.commits.update({
+						base_class.update(commits_coll,{
+                                                                "db_name": self.dbname,
 								"uid": cid
 							},
 							{
@@ -808,17 +720,17 @@ class ivs:
 
 	def path_to_commit(self, cid):
 		path = [cid]
-		com = self.commits.find_one({"uid": cid})
+		com = base_class.find_one(commits_coll,{"db_name":self.dbname,"uid": cid})
 		if not com:
 			return path
 		while len(path) < 100 and cid != self.first_cid:
-			cid = self.commits.find_one({"uid": cid})["parent_id"]
+			cid = base_class.find_one(commits_coll,{"db_name":self.dbname,"uid": cid})["parent_id"]
 			path.insert(0, cid)
 		return path
 
 	def rollback(self, cid):
 		self.load_params()
-		com = self.commits.find_one({"uid": cid})
+		com = base_class.find_one(commits_coll,{"db_name":self.dbname,"uid": cid})
 
 		path = self.path_to_commit(cid)
 
@@ -829,7 +741,7 @@ class ivs:
 		files_to_delete = set()
 		files_content_dict=dict()
 		for com_id in path:
-			commit = self.commits.find_one({"uid": com_id})
+			commit = base_class.find_one(commits_coll,{"db_name":self.dbname,"uid": com_id})
 			for f in commit["added"]:
 				if not os.path.exists(os.path.dirname(self.get_full_path(f))):
 					os.makedirs(os.path.dirname(self.get_full_path(f)))
@@ -841,7 +753,7 @@ class ivs:
 			if len(commit["patch_ids"])==0:
 				continue
 			
-			mongo_patch_cur=self.patches.find({"uid": { "$in": commit["patch_ids"]}})
+			mongo_patch_cur=base_class.find(patches_coll,{"db_name":self.dbname,"uid": { "$in": commit["patch_ids"]}})
 
 			file_path = None
 			for mongo_patch in mongo_patch_cur:
@@ -879,7 +791,7 @@ class ivs:
 		#self.delete_tree(cid)
 
 	def delete_tree(self, cid):
-		child_ids = self.commits.find_one({"uid": cid})["child_ids"]
+		child_ids = base_class.find_one(commits_coll,{"db_name":self.dbname,"uid": cid})["child_ids"]
 		for child_id in child_ids:
 			self.delete_tree(child_id)
 
@@ -890,7 +802,8 @@ class ivs:
 	def log(self):
 		self.load_params()
 		print "\n"
-		commits = self.commits.find( { '$query': {}, '$orderby': { "ts" : -1 } } )
+		commits = base_class.find(commits_coll,{})
+                commits = sorted(commits, key=lambda k: k['ts'],reverse=True) 
 		for commit in commits:
 			print "Commit \t: " + str(commit["uid"])
 			print "Message\t: " + str(commit["msg"])
@@ -909,7 +822,7 @@ class ivs:
 		recover_text = ""
 		patch_ids = entry["patch_ids"]
 		parent_branches=[]
-		temp_cur=self.branches.find_one({"name": self.get_cur_branch()})#["parent_branches"]
+		temp_cur=base_class.find_one(branches_coll,{"name": self.get_cur_branch()})#["parent_branches"]
 		parent_branches = parent_branches + temp_cur["parent_branches"]
 		parent_branches.append(self.get_cur_branch())
 		# print patch_ids
@@ -919,7 +832,7 @@ class ivs:
 				# print patch_id
 
 			# mongo_patch = self.patches.find_one({"uid": patch_id})
-			mongo_patch_cur = self.patches.find({"uid":{'$in': patch_ids}})
+                        mongo_patch_cur = base_class.find(patches_coll,{"db_name":self.dbname,"uid":{'$in': patch_ids}})
 			files_content=None
 			patch_obj_arr=[]
 			
@@ -960,13 +873,13 @@ class ivs:
 			for f in files:
 				if not self.istext(os.path.join(root, f)):
 					continue
-				entry = self.files.find_one({
+				entry = base_class.find_one(files_coll,{"db_name":self.dbname,
 					"path": os.path.relpath(os.path.join(root, f), self.path)
 				})
 				if(entry == None):
 					print "\t" + os.path.relpath(os.path.join(root, f), self.path)
 
-		entries = self.files.find({"is_present": True})
+		entries = base_class.find(files_coll,{"db_name":self.dbname,"is_present": True})
 		for entry in entries:
 			if not os.path.exists(os.path.join(self.path, entry["path"])):
 				print "deleted: \t" + entry["path"]
@@ -996,11 +909,11 @@ class ivs:
 
 		shutil.rmtree(os.path.join(self.path, '.ivs'))
 
-	def show(self, col, name):
-		print "Showing: " + name
-		entry = col.find()
-		for e in entry:
-			print e
+	# def show(self, col, name):
+		# print "Showing: " + name
+		# entry = col.find()
+		# for e in entry:
+			# print e
 
 	def istext(self, filename):
 	    s=open(filename).read(512)
@@ -1030,7 +943,7 @@ class ivs:
 		delete_collection=dict()
 
 		for cid in path:
-			commit = self.commits.find_one({"uid": cid})
+			commit = base_class.find_one(commits_coll,{"db_name":self.dbname,"uid": cid})
 			patch_ids=commit["patch_ids"]
 			for path in commit["added"]:
 				if path not in files_collection:
@@ -1046,7 +959,7 @@ class ivs:
 				files_collection[path]["deleted_cids"].append(cid)
 				delete_collection[path]=True
 
-			for patch in self.patches.find({"uid" :{"$in":patch_ids}}):
+			for patch in base_class.find(patches_coll,{"db_name":self.dbname,"uid" :{"$in":patch_ids}}):
 				if patch["file_path"] not in files_collection:
 					files_collection[path]=self.create_file_entry(path)
 					delete_collection[path]=False
@@ -1058,7 +971,8 @@ class ivs:
 		self.files=self.db.files
 		for key in files_collection:
 			if not delete_collection[key]:
-				self.files.insert(files_collection[key])
+                                temp_entity=files_coll()
+				base_class.insert(temp_entity,files_coll,files_collection[key])
 
 
 						
@@ -1071,6 +985,7 @@ class ivs:
 			"staged": False, 
 			"staged_ts": os.path.getmtime(os.path.join(self.path,path)),
 			"patch_ids": [],
+                        "db_name": self.dbname,
 			"is_present": True,
 			"to_remove": False,
 			"to_add": False,

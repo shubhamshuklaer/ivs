@@ -2,7 +2,18 @@ from pymongo import Connection
 from bson.objectid import ObjectId
 from bson.json_util import dumps
 
-def get_data_for_commits(db_name,commit_uid_list):
+db_name_coll=None
+commits_coll=None
+branches_coll=None
+files_coll=None
+params_coll=None
+base_class=None
+mongo_db_name="ivs"
+
+from define_classes import define_classes
+
+def get_data_for_commits(db_name,commit_uid_list,server=False):
+	define_classes(server)
 	mongo_conn=Connection()
 	db=mongo_conn[db_name]
 	for i in range(len(commit_uid_list)):
@@ -14,10 +25,8 @@ def get_data_for_commits(db_name,commit_uid_list):
 	patch_ids=[]
 	selected_commits_list=[]
 	selected_patches_list=[]
-	selected_files_list=[]
 	selected_branches_list=[]
 
-	file_paths=[]
 	branches=[]
 	param_entry=None
 
@@ -30,14 +39,8 @@ def get_data_for_commits(db_name,commit_uid_list):
 	print(patch_ids)
 
 	for entity in selected_patches:
-		file_paths.append(entity["file_path"])
 		branches.append(entity["branch"])
 		selected_patches_list.append(entity)
-
-	selected_files=db.files.find({'path':{'$in':file_paths}})
-
-	for entity in selected_files:
-		selected_files_list.append(entity)
 
 	selected_branches=db.branches.find({'name':{'$in':branches}})
 
@@ -47,6 +50,6 @@ def get_data_for_commits(db_name,commit_uid_list):
 	if len(selected_commits_list)>0:
 		param_entry=db.params.find_one()
 
-	result={"commits":selected_commits_list,"patches":selected_patches_list,"files":selected_files_list,"branches":selected_branches_list,"params":param_entry}
+	result={"commits":selected_commits_list,"patches":selected_patches_list,"branches":selected_branches_list,"params":param_entry}
 
 	return dumps(result)

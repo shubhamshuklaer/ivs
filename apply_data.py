@@ -4,11 +4,21 @@ from bson.json_util import dumps
 from ivs_base import ivs
 
 
-def apply_data(db_name,data,root_path):
+db_name_coll=None
+commits_coll=None
+branches_coll=None
+files_coll=None
+params_coll=None
+base_class=None
+mongo_db_name="ivs"
+
+from define_classes import define_classes
+
+def apply_data(db_name,data,root_path,server=False):
+	define_classes(server)
     commits_list=data["commits"]
     patches_list=data["patches"]
     branches_list=data["branches"]
-    files_list=data["files"]
     param_entry=data["params"]
 
     mongo_conn=Connection()
@@ -51,32 +61,11 @@ def apply_data(db_name,data,root_path):
                 upsert=True
                 )
 
-    for entity in files_list:
-        db.files.update({"path":entity["path"]},
-                {
-                    "$set":{
-                        "name": entity["name"],
-                        "path": entity["path"],
-                        "staged": entity["staged"],
-                        "staged_ts": entity["staged_ts"],
-                        "is_present": entity["is_present"],
-                        "to_remove": entity["to_remove"],
-                        "to_add": entity["to_add"],
-                        "added_cids": entity["added_cids"],
-                    },
-                    "$addToSet":{
-                        "patch_ids": {"$each":entity["patch_ids"]},
-                        "deleted_cids":{"$each": entity["deleted_cids"]}
-                        }
-                    },
-                upsert=True
-                )
 
     if len(commits_list)>0:
         print("Generating code")
         repo=ivs()
         repo.set_path(root_path)
-        repo.set_dbname(db_name)
         repo.load_params()
         if repo.cur_branch == None:
             repo.cur_branch="master"
