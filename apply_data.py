@@ -40,7 +40,8 @@ def apply_data(db_name,data,root_path,server=False):
                     },
                     "$addToSet": { "child_ids" :{"$each": commit["child_ids"]}}
                     },
-                upsert=True
+                upsert=True,
+				obj=commits_coll()
                 )
 
     for patch in patches_list:
@@ -55,22 +56,24 @@ def apply_data(db_name,data,root_path,server=False):
                     "branch": patch["branch"],
             })
 
-    for branch in branches_list:
-        base_class.update(branches_coll,{"db_name":db_name,"name":branch["name"]},
-                {
-                    "$set":{
-				"name": branch["name"],
-                                "db_name":db_name,
-				"commit_ids": branch["commit_ids"],
-				"head": branch["head"],
-				"tail": branch["tail"],
-				"parent_branches": branch["parent_branches"],
-                        }
-                    },
-                upsert=True
-                )
+	for branch in branches_list:
+		base_class.update(branches_coll,{"db_name":db_name,"name":branch["name"]},
+				{
+					"$set":{
+						"name": branch["name"],
+						"db_name":db_name,
+						"commit_ids": branch["commit_ids"],
+						"head": branch["head"],
+						"tail": branch["tail"],
+						"parent_branches": branch["parent_branches"],
+						}
+					},
+				upsert=True,
+				obj=branches_coll()
+				)
 
 
+	print("shubham shukla  "+str(branches_coll.all().count()))
     if len(commits_list)>0:
         print("Generating code")
         repo=ivs()
@@ -81,23 +84,22 @@ def apply_data(db_name,data,root_path,server=False):
             repo.cur_branch="master"
 
         if param_entry!=None:
-            print("hhhhhhhhhhhhhhhhhhhhhhhhhhhhh")
-            print({"db_name":db_name,"path":root_path})
-            base_class.update(params_coll,{"db_name":db_name,"path":root_path},
-                    {
-                        "$set":{
-                            "path": root_path,
-                            "db_name": db_name,
-                            "first_cid": param_entry["first_cid"],
-                            "cur_com_num": param_entry["cur_com_num"],
-                            "last_cid": base_class.find_one(branches_coll,{"db_name":db_name,"name":repo.cur_branch})["head"],
-                            "cur_com_level": param_entry["cur_com_level"],
-                            "cur_branch": repo.cur_branch,
-                            "cur_patch_num": param_entry["cur_patch_num"],
-                            }
-                        },
-                    upsert=True
-                    )
+			base_class.update(params_coll,{"db_name":db_name,"path":root_path},
+					{
+						"$set":{
+							"path": root_path,
+							"db_name": db_name,
+							"first_cid": param_entry["first_cid"],
+							"cur_com_num": param_entry["cur_com_num"],
+							"last_cid": base_class.find_one(branches_coll,{"db_name":db_name,"name":repo.cur_branch})["head"],
+							"cur_com_level": param_entry["cur_com_level"],
+							"cur_branch": repo.cur_branch,
+							"cur_patch_num": param_entry["cur_patch_num"],
+							}
+						},
+					upsert=True,
+					obj=params_coll()
+					)
 
         if not server:
             param = repo.params.find_one({"path": root_path})

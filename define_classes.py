@@ -9,24 +9,25 @@ def define_classes(server=False):
 
             @staticmethod
             def insert(obj,_class,input_dict):
-                for key in input_dict:
-                    if key=="$set":
-                        for temp_key in input_dict[key]:
-                            setattr(obj,temp_key,input_dict[key][temp_key])
-                            print(temp_key,getattr(obj,temp_key))
-                    elif key=="$addToSet":
-                        for temp_key in input_dict[key]:
-                            temp_val=input_dict[key][temp_key]
-                            if type(temp_val) is dict:
-                                temp_val=temp_val["$each"]
-                                print("fdsfsadfasd")
-                            else:
-                                temp_val=[temp_val]
-                            setattr(obj,temp_key,temp_val)
-                            print(temp_key,getattr(obj,temp_key))
-                    else:
-                        setattr(obj,key,input_dict[key])
-                obj.put()
+				for key in input_dict:
+					if key=="$set":
+						for temp_key in input_dict[key]:
+							setattr(obj,temp_key,input_dict[key][temp_key])
+							print(temp_key,getattr(obj,temp_key))
+					elif key=="$addToSet":
+						for temp_key in input_dict[key]:
+							temp_val=input_dict[key][temp_key]
+							if type(temp_val) is dict:
+								temp_val=temp_val["$each"]
+								print("fdsfsadfasd")
+							else:
+								temp_val=[temp_val]
+							setattr(obj,temp_key,temp_val)
+							print(temp_key,getattr(obj,temp_key))
+					else:
+						setattr(obj,key,input_dict[key])
+				ret_val=obj.put()
+				print(ret_val,_class)
 
             @staticmethod
             def update_entity(entity,_class,update_dict):
@@ -57,7 +58,7 @@ def define_classes(server=False):
 
 
             @staticmethod
-            def update(_class,search_dict,update_dict,upsert=False,multi=False):
+            def update(_class,search_dict,update_dict,upsert=False,multi=False,obj=None):
                 res=_class.all()
                 for key in search_dict:
                     val=search_dict[key]
@@ -77,8 +78,7 @@ def define_classes(server=False):
                 matches=matches_copy
 
                 if count==0 and upsert:
-                    temp_entity=_class()
-                    base_class.insert(temp_entity,_class,update_dict)
+                    base_class.insert(obj,_class,update_dict)
                 elif count>0:
                     if not multi:
                         for match in matches:
@@ -130,10 +130,7 @@ def define_classes(server=False):
                         if "$in" in val:
                             res.filter(key+" IN",val["$in"])
                     else:
-                        print(_class)
                         res.filter(key+" =",val)
-                        print("shususdshsd")
-                        print(res.count())
 
                 matches=res.run()
                 match_dict_list=[]
