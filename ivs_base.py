@@ -10,6 +10,7 @@ import diff_match_patch as dmp_module
 import datetime
 import bson
 import json
+from bson.json_util import dumps,loads
 
 
 import string
@@ -203,7 +204,7 @@ class ivs:
 
 			
 			self.cur_branch = "master"
-			tmp_id = ObjectId()
+			tmp_id = str(ObjectId())
                         if not server:
                             temp_entity=commits_coll()
                             base_class.insert(temp_entity,commits_coll,{
@@ -260,13 +261,13 @@ class ivs:
 	def is_all_committed(self):
             entries = base_class.find(files_coll,{"db_name":self.dbname,"is_present": True})
 
-		for entry in entries:
-			if not os.path.exists(os.path.join(self.path, entry["path"])):
-				return False
-			if self.is_diff(entry):
-				print "unstaged: " + entry["path"]
-				return False
-		return True
+            for entry in entries:
+                    if not os.path.exists(os.path.join(self.path, entry["path"])):
+                            return False
+                    if self.is_diff(entry):
+                            print "unstaged: " + entry["path"]
+                            return False
+            return True
 
 	def restore_branch_data(self, branch):
 		print "Restoring data on branch : " + str(branch)
@@ -314,7 +315,7 @@ class ivs:
 			}
 		)
 		
-		cid = ObjectId()
+		cid = str(ObjectId())
                 temp_entity=commits_coll()
 		base_class.insert(temp_entity,commits_coll,{
 			"uid":  cid,
@@ -469,7 +470,7 @@ class ivs:
 			return
 		else:
 			print "\nCommit"
-		cid = ObjectId()
+		cid = str(ObjectId())
                 temp_entity=commits_coll()
 		base_class.insert(temp_entity,commits_coll,{
 			"uid":  cid,
@@ -528,11 +529,11 @@ class ivs:
 
 					# print patches[0].patchs
 					for patch in patches:
-						pid = ObjectId()
+						pid = str(ObjectId())
                                                 temp_entity=patches_coll()
 						base_class.insert(temp_entity,patches_coll,{
 							"uid": pid,
-							"dict": patch.patch_dict,
+							"diff_dict": dumps(patch.patch_dict),
 							"num": self.get_next_patch_num(),
                                                         "db_name": self.dbname,
 							"file_path": entry["path"],
@@ -602,11 +603,11 @@ class ivs:
 
 					# print patches[0].patchs
 					for patch in patches:
-						pid = ObjectId()
+						pid = str(ObjectId())
                                                 temp_entity=patches_coll()
 						base_class.insert(temp_entity,patches_coll,{
 							"uid": pid,
-							"dict": patch.patch_dict,
+							"diff_dict": dumps(patch.patch_dict),
 							"num": self.get_next_patch_num(),
                                                         "db_name": self.dbname,
 							"file_path": entry["path"],
@@ -673,11 +674,11 @@ class ivs:
 
 					# print patches[0].patchs
 					for patch in patches:
-						pid = ObjectId()
+						pid = str(ObjectId())
                                                 temp_entity=patches_coll()
                                                 base_class.insert(temp_entity,patches_coll,{
                                                     "uid": pid,
-                                                    "dict": patch.patch_dict,
+                                                    "diff_dict": dumps(patch.patch_dict),
                                                     "num": self.get_next_patch_num(),
                                                     "file_path": entry["path"],
                                                     "db_name": self.dbname,
@@ -760,11 +761,12 @@ class ivs:
 
 				patch_dict=dict()
 				# print(mongo_patch)
-				patch_dict["diffs"]=mongo_patch["dict"]["diffs"]
-				patch_dict["start1"]=int(mongo_patch["dict"]["start1"])
-				patch_dict["start2"]=int(mongo_patch["dict"]["start2"])
-				patch_dict["length1"]=int(mongo_patch["dict"]["length1"])
-				patch_dict["length2"]=int(mongo_patch["dict"]["length2"])
+                                mongo_patch_dict=loads(mongo_patch["diff_dict"])
+				patch_dict["diffs"]=mongo_patch_dict["diffs"]
+				patch_dict["start1"]=int(mongo_patch_dict["start1"])
+				patch_dict["start2"]=int(mongo_patch_dict["start2"])
+				patch_dict["length1"]=int(mongo_patch_dict["length1"])
+				patch_dict["length2"]=int(mongo_patch_dict["length2"])
 
 				patch_obj=dmp_module.patch_obj()
 				patch_obj.fill_dict(patch_dict)
@@ -844,12 +846,13 @@ class ivs:
 						continue
 
 					patch_dict=dict()
+                                        mongo_patch_dict=loads(mongo_patch["diff_dict"])
 					# print(mongo_patch)
-					patch_dict["diffs"]=mongo_patch["dict"]["diffs"]
-					patch_dict["start1"]=int(mongo_patch["dict"]["start1"])
-					patch_dict["start2"]=int(mongo_patch["dict"]["start2"])
-					patch_dict["length1"]=int(mongo_patch["dict"]["length1"])
-					patch_dict["length2"]=int(mongo_patch["dict"]["length2"])
+					patch_dict["diffs"]=mongo_patch_dict["diffs"]
+					patch_dict["start1"]=int(mongo_patch_dict["start1"])
+					patch_dict["start2"]=int(mongo_patch_dict["start2"])
+					patch_dict["length1"]=int(mongo_patch_dict["length1"])
+					patch_dict["length2"]=int(mongo_patch_dict["length2"])
 
 					patch_obj=dmp_module.patch_obj()
 					patch_obj.fill_dict(patch_dict)

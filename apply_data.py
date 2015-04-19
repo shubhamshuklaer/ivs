@@ -15,7 +15,7 @@ mongo_db_name="ivs"
 from define_classes import define_classes
 
 def apply_data(db_name,data,root_path,server=False):
-	define_classes(server)
+    define_classes(server)
     commits_list=data["commits"]
     patches_list=data["patches"]
     branches_list=data["branches"]
@@ -73,7 +73,7 @@ def apply_data(db_name,data,root_path,server=False):
         if param_entry!=None:
             db.params.update({"path":root_path},
                     {
-                        "$set"{
+                        "$set":{
                             "path": root_path,
                             "dbname": db_name,
                             "first_cid": param_entry["first_cid"],

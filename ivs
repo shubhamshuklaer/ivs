@@ -163,7 +163,7 @@ def process(repo,action,get_data_func,process_data_func,header_add=None):
     #conn.request("POST","",body,header)
     #response=conn.getresponse()
     os.environ['NO_PROXY'] = '127.0.0.1'
-    response=requests.post("https://"+remote_repo_location.netloc,headers=header,data=body,verify=False)
+    response=requests.post("http://"+remote_repo_location.netloc,headers=header,data=body,verify=False)
     print(response.status_code)
     data=""
     if response.status_code==200:

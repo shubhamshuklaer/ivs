@@ -5,7 +5,7 @@ def define_classes(server=False):
     global files_coll
     global params_coll
     global base_class
-	global mongo_db_name
+    global mongo_db_name
 
     if server:
         from google.appengine.ext import db

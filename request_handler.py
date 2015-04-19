@@ -9,20 +9,21 @@ from get_data_for_commits import get_data_for_commits
 from apply_data import apply_data
 from ivs_base import ivs
 import shutil
+from google.appengine.ext import webapp
 #The CGIHTTPServer module defines a request-handler class, 
 #interface compatible with BaseHTTPServer.BaseHTTPRequestHandler 
 #and inherits behavior from SimpleHTTPServer.SimpleHTTPRequestHandler 
 #but can also run CGI scripts.
 
-class request_handler(BaseHTTPRequestHandler):
+class request_handler(webapp.RequestHandler):
     def do_POST(self):
-        user_name=self.headers.getheader('user')
-        passwd=self.headers.getheader('passwd')
+        user_name=self.request.headers["user"]
+        passwd=self.request.headers['passwd']
         data_to_send=""
         mong_conn_users=Connection()
         db_users=mong_conn_users[server_settings.user_auth_db_name]
-        length = int(self.headers.getheader('content-length'))
-        body=self.rfile.read(length)
+        length = int(self.request.headers['content-length'])
+        body=self.request.body_file.read(length)
         param=urlparse.parse_qs(body,True)#true keeps blank entries in dict
         action=param["action"][0]
         message=""
@@ -165,6 +166,6 @@ class request_handler(BaseHTTPRequestHandler):
         self.send_response(res_code)
         self.send_header('Content-type','text/html')
         self.end_headers()
-        self.wfile.write(data_to_send)
+        self.response.write(data_to_send)
         
 
