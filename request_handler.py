@@ -2,26 +2,65 @@ from BaseHTTPServer import BaseHTTPRequestHandler
 import CGIHTTPServer
 import urlparse
 import server_settings
-from pymongo import Connection
+# from pymongo import Connection
 import os
-from bson.json_util import dumps,loads
+from json import dumps,loads
 from get_data_for_commits import get_data_for_commits
 from apply_data import apply_data
 from ivs_base import ivs
 import shutil
-from google.appengine.ext import webapp
+import webapp2
 #The CGIHTTPServer module defines a request-handler class, 
 #interface compatible with BaseHTTPServer.BaseHTTPRequestHandler 
 #and inherits behavior from SimpleHTTPServer.SimpleHTTPRequestHandler 
 #but can also run CGI scripts.
 
-class request_handler(webapp.RequestHandler):
-    def do_POST(self):
+import mongo_db_name_setting
+
+
+
+from define_classes import define_classes
+ret_list=define_classes(server=True)
+
+mongo_db_name_setting.init()
+mongo_db_name_setting.mongo_db_name="ivs_client"
+mongo_db_name_setting.db_name_coll=ret_list[0]
+mongo_db_name_setting.commits_coll=ret_list[1]
+mongo_db_name_setting.branches_coll=ret_list[2]
+mongo_db_name_setting.files_coll=ret_list[3]
+mongo_db_name_setting.params_coll=ret_list[4]
+mongo_db_name_setting.base_class=ret_list[5]
+
+
+mongo_db_name=mongo_db_name_setting.mongo_db_name
+db_name_coll=mongo_db_name_setting.db_name_coll
+commits_coll=mongo_db_name_setting.commits_coll
+branches_coll=mongo_db_name_setting.branches_coll
+files_coll=mongo_db_name_setting.files_coll
+params_coll=mongo_db_name_setting.params_coll
+base_class=mongo_db_name_setting.base_class
+
+from google.appengine.ext import db
+
+class users_coll(db.Model):
+    user_name=db.StringProperty(required=True)
+    passwd=db.StringProperty(required=True)
+    repo=db.StringListProperty(required=True)
+
+class request_handler(webapp2.RequestHandler):
+    def post(self):
+        print("hello")
+        global mongo_db_name
+        global db_name_coll
+        global commits_coll
+        global branches_coll
+        global files_coll
+        global params_coll
+        global base_class
+
         user_name=self.request.headers["user"]
         passwd=self.request.headers['passwd']
         data_to_send=""
-        mong_conn_users=Connection()
-        db_users=mong_conn_users[server_settings.user_auth_db_name]
         length = int(self.request.headers['content-length'])
         body=self.request.body_file.read(length)
         param=urlparse.parse_qs(body,True)#true keeps blank entries in dict
@@ -35,14 +74,27 @@ class request_handler(webapp.RequestHandler):
 
 
         if action in ["user_add"]:
-            if db_users.users.find({"user_name":user_name}).count() > 0:
+            matches=base_class.find(users_coll,{"user_name":user_name})
+            
+            count=0
+            for match in matches:
+                count=count+1
+
+            if count > 0:
                 data_to_send=dumps("user already exist")
             else:
-                db_users.users.insert({"user_name":user_name,"passwd":passwd,"repo":[""]})
+                temp_entity=users_coll()
+                base_class.insert(temp_entity,users_coll,{"user_name":user_name,"passwd":passwd,"repo":[""]})
                 data_to_send=dumps("user added")
             res_code=200
         else:
-            auth_ret=db_users.users.find({"user_name":user_name,"passwd":passwd,"repo":path}).count()>0
+            matches=base_class.find(users_coll,{"user_name":user_name,"passwd":passwd,"repo":path})
+
+            count=0
+            for match in matches:
+                count=count+1
+
+            auth_ret=count>0
 
             if auth_ret:
                 if action=="serv_create":
@@ -59,7 +111,7 @@ class request_handler(webapp.RequestHandler):
                         repo.set_path(repo_root)
                         repo.set_dbname(user_name+"_"+db_name)
                         repo.init(True)
-                        temp_ret_struct=db_users.users.update({"user_name":user_name},{
+                        temp_ret_struct=base_class.update(users_coll,{"user_name":user_name},{
                             "$addToSet" : {
                                     "repo": user_name+"/"+new_repo
                                 }
@@ -67,7 +119,6 @@ class request_handler(webapp.RequestHandler):
                         data_to_send=dumps("Initialized new repo "+user_name+"/"+new_repo)
                     res_code=200
                 else:
-                    mongo_conn=Connection()
                     repo_path=os.path.abspath(os.path.join(server_settings.service_dir,path))    
                     ivs_folder=os.path.abspath(os.path.join(repo_path,".ivs"))
                     db_name_file_name=os.path.abspath(os.path.join(ivs_folder,"db_name"))
@@ -79,7 +130,6 @@ class request_handler(webapp.RequestHandler):
                         db_name=db_name_file.readline().rstrip("\n")
                         db_name_file.close()
 
-                        db=mongo_conn[db_name]
                         list_commit_uids=[]
                         list_commit_child_ids=[]
                         diff_list=[]
@@ -94,8 +144,13 @@ class request_handler(webapp.RequestHandler):
                             data_to_send="Done"
                         elif action=="add_perm":
                             add_perm_for_user=self.headers.getheader("add_perm_for_user")
-                            if db_users.users.find({"user_name":add_perm_for_user}).count()>0:
-                                db_users.users.update({"user_name":add_perm_for_user},{
+                            matches=base_class.find(users_coll,{"user_name":add_perm_for_user})
+                            count=0
+                            for match in matches:
+                                count=count+1
+
+                            if count>0:
+                                base_class.update(users_coll,{"user_name":add_perm_for_user},{
                                     "$addToSet": {
                                             "repo": path
                                         }
@@ -111,20 +166,19 @@ class request_handler(webapp.RequestHandler):
                             repo.set_path(repo_root)
                             repo.set_dbname(db_name)
                             repo.delete()
-                            db_users.users.update({},{
+                            base_class.update(users_coll,{},{
                                 "$pull": {
                                         "repo": path
                                     }},
                                         multi= True
                             )
-                            mongo_conn.drop_database(db_name) 
                             shutil.rmtree(repo_root)
                             data_to_send="Deleted repo"
                             
                             res_code=200
                         elif action=="get_need" or action=="pull":
 
-                            for result in db.commits.find({ },{ 'uid': 1, 'child_ids':1, '_id':0 }):
+                            for result in base_class.find(commits_coll,{"db_name":db_name },{ 'uid': 1, 'child_ids':1, '_id':0 }):
                                 list_commit_uids.append(result["uid"])
                                 list_commit_child_ids.append(str(result["child_ids"]))
 
@@ -163,9 +217,12 @@ class request_handler(webapp.RequestHandler):
             else:
                 res_code=403
 
-        self.send_response(res_code)
-        self.send_header('Content-type','text/html')
-        self.end_headers()
-        self.response.write(data_to_send)
+        self.response.status(res_code)
+        print(res_code)
+        # self.response.write(data_to_send)
+        self.response.write("dsfds")
         
 
+app = webapp2.WSGIApplication([
+        ('/', request_handler),
+        ], debug=True)

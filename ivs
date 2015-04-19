@@ -14,11 +14,36 @@ from get_data_for_commits import get_data_for_commits
 from apply_data import apply_data
 from bson.json_util import dumps,loads
 import requests
+import mongo_db_name_setting
+
+
+
+from define_classes import define_classes
+ret_list=define_classes(server=False)
+
+
+mongo_db_name_setting.init()
+mongo_db_name_setting.mongo_db_name="ivs_client"
+mongo_db_name_setting.db_name_coll=ret_list[0]
+mongo_db_name_setting.commits_coll=ret_list[1]
+mongo_db_name_setting.branches_coll=ret_list[2]
+mongo_db_name_setting.files_coll=ret_list[3]
+mongo_db_name_setting.params_coll=ret_list[4]
+mongo_db_name_setting.base_class=ret_list[5]
+
+
+mongo_db_name=mongo_db_name_setting.mongo_db_name
+db_name_coll=mongo_db_name_setting.db_name_coll
+commits_coll=mongo_db_name_setting.commits_coll
+branches_coll=mongo_db_name_setting.branches_coll
+files_coll=mongo_db_name_setting.files_coll
+params_coll=mongo_db_name_setting.params_coll
+base_class=mongo_db_name_setting.base_class
 
 user_name=""
 passwd=""
 repo_root=""
-repo=ivs()
+repo=ivs(mongo_db_name_setting.mongo_db_name)
 
 one_arg_args=["status","delete","log"]
 two_arg_args=["init","bare_init","add","push","pull","commit","rm","branch","chkout","rollback","user_add","add_perm","serv_del","serv_create"]
@@ -30,6 +55,7 @@ valid_args=valid_args+three_arg_args
 db_name=""
 mongo_client=None
 db=None
+
 
 def get_repo_root():
     global repo_root

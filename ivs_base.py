@@ -1,6 +1,6 @@
 #!/usr/bin/python
 from __future__ import division
-from bson.objectid import ObjectId
+from uuid import uuid4 as ObjectId
 import os
 import shutil
 import sys
@@ -8,22 +8,21 @@ import time
 import unittest
 import diff_match_patch as dmp_module
 import datetime
-import bson
-import json
-from bson.json_util import dumps,loads
+from json import dumps,loads
+import mongo_db_name_setting
 
 
 import string
 
+
+mongo_db_name=None
 db_name_coll=None
 commits_coll=None
 branches_coll=None
 files_coll=None
 params_coll=None
 base_class=None
-mongo_db_name="ivs"
 
-from define_classes import define_classes
 
 class ivs:
 	def __init__(self,_server=False):
@@ -46,10 +45,24 @@ class ivs:
 		self.dmp =None
 		self.patch_obj =None
 		self.path=None
-		self.db_name=mongo_db_name
                 self.server=_server
-                define_classes(_server)
+		self.db_name=mongo_db_name_setting.mongo_db_name
 
+                global mongo_db_name
+                global db_name_coll
+                global commits_coll
+                global branches_coll
+                global files_coll
+                global params_coll
+                global base_class
+
+                mongo_db_name=mongo_db_name_setting.mongo_db_name
+                db_name_coll=mongo_db_name_setting.db_name_coll
+                commits_coll=mongo_db_name_setting.commits_coll
+                branches_coll=mongo_db_name_setting.branches_coll
+                files_coll=mongo_db_name_setting.files_coll
+                params_coll=mongo_db_name_setting.params_coll
+                base_class=mongo_db_name_setting.base_class
 	def set_uname(self,name):
 		self.name=name;
 
@@ -464,8 +477,12 @@ class ivs:
 	def commit(self, msg):
 		self.load_params()
 		entries = base_class.find(files_coll,{"db_name":self.dbname,"staged": True, "is_present": True})
+
+                count=0
+                for match in entries:
+                    count=count+1
 		# print entries.count()
-		if(entries.count() == 0):
+		if(count == 0):
 			print "Nothing to commit. Aborting"
 			return
 		else:
@@ -837,8 +854,12 @@ class ivs:
                         mongo_patch_cur = base_class.find(patches_coll,{"db_name":self.dbname,"uid":{'$in': patch_ids}})
 			files_content=None
 			patch_obj_arr=[]
+
+                        count=0
+                        for match in mongo_patch_cur:
+                            count=count+1
 			
-			if mongo_patch_cur.count() < 1:
+			if count < 1:
 				pass
 			else:
 				for mongo_patch in mongo_patch_cur:

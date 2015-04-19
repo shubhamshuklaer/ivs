@@ -1,12 +1,6 @@
-def define_classes(server=False):
-    global db_name_coll
-    global commits_coll
-    global branches_coll
-    global files_coll
-    global params_coll
-    global base_class
-    global mongo_db_name
+import mongo_db_name_setting
 
+def define_classes(server=False):
     if server:
         from google.appengine.ext import db
         
@@ -40,21 +34,25 @@ def define_classes(server=False):
 
             @staticmethod
             def update(_class,search_dict,update_dict,upsert=False,multi=False):
-                query=""
+                res=_class.all()
                 for key in search_dict:
                     val=search_dict[key]
                     if type(val) is dict:
                         if "$in" in val:
-                            query=key+" IN "+val["$in"]
+                            res.filter(key+" IN",val["$in"])
                     else:
-                        query=key+" ="+val
+                        res.filter(key+" =",val)
 
-                matches=_class.all().filter(query)
+                matches=res.run()
 
-                if matches.count()==0 and upsert:
+                count=0
+                for match in matches:
+                    count=count+1
+
+                if count==0 and upsert:
                     temp_entity=_class()
                     temp_entity.insert(update_dict)
-                elif matches.count()>0:
+                elif count>0:
                     if not multi:
                         match=matches[0]
                         update_entity(match,update_dict)
@@ -65,23 +63,29 @@ def define_classes(server=False):
             @staticmethod
             def find_one(_class,search_dict):
                 res=_base_class.find(_class,search_dict)
+                
+                count=0
+                for match in matches:
+                    count=count+1
 
-                if res.count()>0:
+                if count>0:
                     return res[0]
                 else:
                     return None
 
             @staticmethod
             def find(_class,search_dict):
-                query=""
+                res=_class.all()
                 for key in search_dict:
                     val=search_dict[key]
                     if type(val) is dict:
                         if "$in" in val:
-                            query=key+" IN "+val["$in"]
+                            res.filter(key+" IN",val["$in"])
                     else:
-                        query=key+" ="+val
-                return _class.all().filter(query)
+                        print(_class)
+                        res.filter(key+" =",val)
+
+                return res.run()
                 
         class _db_name_coll(db.Model):
             repo_path=db.StringProperty(required=True)
@@ -90,7 +94,7 @@ def define_classes(server=False):
         class _commits_coll(db.Model):
             uid=db.StringProperty(required=True)
             patch_ids=db.StringListProperty(required=True)
-            ts=db.datetime(required=True)
+            ts=db.DateTimeProperty(required=True)
             msg=db.StringProperty(required=True)
             added=db.StringListProperty(required=True)
             deleted=db.StringListProperty(required=True)
@@ -113,7 +117,7 @@ def define_classes(server=False):
             name=db.StringProperty(required=True)
             path=db.StringProperty(required=True)
             staged=db.BooleanProperty(required=True)
-            staged_ts=db.datetime(required=True)
+            staged_ts=db.DateTimeProperty(required=True)
             patch_ids=db.StringListProperty(required=True)
             is_present=db.BooleanProperty(required=True)
             to_remove=db.BooleanProperty(required=True)
@@ -152,7 +156,7 @@ def define_classes(server=False):
                     setattr(obj,key,input_dict[key])
                 
                 mongo_conn=Connection()
-                db=mongo_conn[mongo_db_name]
+                db=mongo_conn[mongo_db_name_setting.mongo_db_name]
                 coll_name=_class().__class__.__name__[:-5] # removing the _coll from end
                 db[coll_name].insert(input_dict)
 
@@ -160,7 +164,7 @@ def define_classes(server=False):
             @staticmethod
             def update(_class,search_dict,update_dict,upsert=False,multi=False):
                 mongo_conn=Connection()
-                db=mongo_conn[mongo_db_name]
+                db=mongo_conn[mongo_db_name_setting.mongo_db_name]
                 coll_name=_class().__class__.__name__[:-5] # removing the _coll from end
                 db[coll_name].update(search_dict,update_dict,upsert=upsert,multi=multi)
 
@@ -176,7 +180,7 @@ def define_classes(server=False):
             @staticmethod
             def find(_class,search_dict):
                 mongo_conn=Connection()
-                db=mongo_conn[mongo_db_name]
+                db=mongo_conn[mongo_db_name_setting.mongo_db_name]
                 coll_name=_class().__class__.__name__[:-5] # removing the _coll from end
                 return db[coll_name].find(search_dict)
 
@@ -244,9 +248,4 @@ def define_classes(server=False):
                 self.cur_branch=None
                 self.cur_patch_num=None
 
-    db_name_coll=_db_name_coll
-    commits_coll=_commits_coll
-    branches_coll=_branches_coll
-    files_coll=_files_coll
-    params_coll=_params_coll
-    base_class=_base_class
+    return [_db_name_coll,_commits_coll,_branches_coll,_files_coll,_params_coll,_base_class]

@@ -1,35 +1,30 @@
-from pymongo import Connection
-from bson.objectid import ObjectId
-from bson.json_util import dumps
+from json import dumps
 from ivs_base import ivs
+import mongo_db_name_setting
 
 
-db_name_coll=None
-commits_coll=None
-branches_coll=None
-files_coll=None
-params_coll=None
-base_class=None
-mongo_db_name="ivs"
-
-from define_classes import define_classes
 
 def apply_data(db_name,data,root_path,server=False):
-    define_classes(server)
+    mongo_db_name=mongo_db_name_setting.mongo_db_name
+    db_name_coll=mongo_db_name_setting.db_name_coll
+    commits_coll=mongo_db_name_setting.commits_coll
+    branches_coll=mongo_db_name_setting.branches_coll
+    files_coll=mongo_db_name_setting.files_coll
+    params_coll=mongo_db_name_setting.params_coll
+    base_class=mongo_db_name_setting.base_class
+
     commits_list=data["commits"]
     patches_list=data["patches"]
     branches_list=data["branches"]
     param_entry=data["params"]
 
-    mongo_conn=Connection()
-    db=mongo_conn[db_name]
-
     for commit in commits_list:
-        db.commits.update({"uid":commit["uid"]},
+        base_class.update(commits_coll,{"db_name":db_name,"uid":commit["uid"]},
                 {
                     "$set":{
                         "uid":commit["uid"],
                         "patch_ids": commit["patch_ids"],
+                        "db_name":db_name,
                         "ts": commit["ts"],
                         "msg": commit["msg"],
                         "added": commit["added"],
@@ -45,13 +40,15 @@ def apply_data(db_name,data,root_path,server=False):
                 )
 
     for patch in patches_list:
-        db.patches.insert(patch)
+        temp_entity=patches_coll()
+        base_class.insert(temp_entity,patches_coll,patch)
 
     for branch in branches_list:
-        db.branches.update({"name":branch["name"]},
+        base_class.update(branches_coll,{"db_name":db_name,"name":branch["name"]},
                 {
                     "$set":{
 				"name": branch["name"],
+                                "db_name":db_name,
 				"commit_ids": branch["commit_ids"],
 				"head": branch["head"],
 				"tail": branch["tail"],
@@ -71,11 +68,11 @@ def apply_data(db_name,data,root_path,server=False):
             repo.cur_branch="master"
 
         if param_entry!=None:
-            db.params.update({"path":root_path},
+            base_class.update(params_coll,{"db_name":db_name,"path":root_path},
                     {
                         "$set":{
                             "path": root_path,
-                            "dbname": db_name,
+                            "db_name": db_name,
                             "first_cid": param_entry["first_cid"],
                             "cur_com_num": param_entry["cur_com_num"],
                             "last_cid": db.branches.find_one({"name":repo.cur_branch})["head"],
