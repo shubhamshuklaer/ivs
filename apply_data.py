@@ -42,7 +42,15 @@ def apply_data(db_name,data,root_path,server=False):
 
     for patch in patches_list:
         temp_entity=patches_coll()
-        base_class.insert(temp_entity,patches_coll,patch)
+        base_class.insert(temp_entity,patches_coll,{
+                    "uid": patch["uid"],
+                    "diff_dict": patch["diff_dict"],
+                    "num": patch["num"],
+                    "db_name": db_name,
+                    "file_path": patch["file_path"],
+                    "cid": patch["cid"],
+                    "branch": patch["branch"],
+            })
 
     for branch in branches_list:
         base_class.update(branches_coll,{"db_name":db_name,"name":branch["name"]},

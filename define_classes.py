@@ -121,6 +121,7 @@ def define_classes(server=False):
             @staticmethod
             def find(_class,search_dict):
                 res=_class.all()
+                print(_class)
                 for key in search_dict:
                     val=search_dict[key]
                     if type(val) is dict:
@@ -129,12 +130,15 @@ def define_classes(server=False):
                     else:
                         print(_class)
                         res.filter(key+" =",val)
+                        print("shususdshsd")
+                        print(res.count())
 
                 matches=res.run()
                 match_dict_list=[]
 
                 for match in matches:
                     match_dict_list.append(db.to_dict(match))
+                    print("hellllll")
 
                 return match_dict_list
 
@@ -230,10 +234,8 @@ def define_classes(server=False):
             def find_one(_class,search_dict):
                 matches=base_class.find(_class,search_dict)
 
-                if matches.count()>0:
-                    for match in matches:
-                        break
-                    return match
+                if len(matches)>0:
+                    return matches[0]
                 else:
                     return None
 
@@ -242,7 +244,13 @@ def define_classes(server=False):
                 mongo_conn=Connection()
                 db=mongo_conn[mongo_db_name_setting.mongo_db_name]
                 coll_name=_class().__class__.__name__[:-5] # removing the _coll from end
-                return db[coll_name].find(search_dict,{"_id":0})
+                matches=db[coll_name].find(search_dict,{"_id":0})
+                match_list=[]
+
+                for match in matches:
+                    match_list.append(match)
+
+                return match_list
 
 
             @staticmethod

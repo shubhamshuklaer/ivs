@@ -199,6 +199,7 @@ class request_handler(webapp2.RequestHandler):
                         elif action=="get_need" or action=="pull":
 
                             for result in base_class.find(commits_coll,{"db_name":db_name }):
+                                print(result)
                                 list_commit_uids.append(result["uid"])
                                 list_commit_child_ids.append(str(result["child_ids"]))
 

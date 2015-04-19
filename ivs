@@ -134,8 +134,6 @@ def get_pull_data():
     list_commit_uids=[]
     list_commit_child_ids=[]
     for result in base_class.find(commits_coll,{"db_name":db_name}):
-        print("fdhfs")
-        print(result)
         list_commit_uids.append(result["uid"])
         list_commit_child_ids.append(str(result["child_ids"]))
     
