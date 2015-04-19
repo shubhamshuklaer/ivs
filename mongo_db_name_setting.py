@@ -5,6 +5,7 @@ def init():
     global commits_coll
     global branches_coll
     global files_coll
+    global patches_coll
     global params_coll
     global base_class
     mongo_bd_name="garbage"

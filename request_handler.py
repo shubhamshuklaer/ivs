@@ -28,8 +28,9 @@ mongo_db_name_setting.db_name_coll=ret_list[0]
 mongo_db_name_setting.commits_coll=ret_list[1]
 mongo_db_name_setting.branches_coll=ret_list[2]
 mongo_db_name_setting.files_coll=ret_list[3]
-mongo_db_name_setting.params_coll=ret_list[4]
-mongo_db_name_setting.base_class=ret_list[5]
+mongo_db_name_setting.patches_coll=ret_list[4]
+mongo_db_name_setting.params_coll=ret_list[5]
+mongo_db_name_setting.base_class=ret_list[6]
 
 
 mongo_db_name=mongo_db_name_setting.mongo_db_name
@@ -37,15 +38,16 @@ db_name_coll=mongo_db_name_setting.db_name_coll
 commits_coll=mongo_db_name_setting.commits_coll
 branches_coll=mongo_db_name_setting.branches_coll
 files_coll=mongo_db_name_setting.files_coll
+patches_coll=mongo_db_name_setting.patches_coll
 params_coll=mongo_db_name_setting.params_coll
 base_class=mongo_db_name_setting.base_class
 
 from google.appengine.ext import db
 
 class users_coll(db.Model):
-    user_name=db.StringProperty(required=True)
-    passwd=db.StringProperty(required=True)
-    repo=db.StringListProperty(required=True)
+    user_name=db.StringProperty()
+    passwd=db.StringProperty()
+    repo=db.StringListProperty()
 
 class request_handler(webapp2.RequestHandler):
     def post(self):
@@ -55,6 +57,7 @@ class request_handler(webapp2.RequestHandler):
         global commits_coll
         global branches_coll
         global files_coll
+        global patches_coll
         global params_coll
         global base_class
 
@@ -98,37 +101,50 @@ class request_handler(webapp2.RequestHandler):
 
             if auth_ret:
                 if action=="serv_create":
-                    new_repo=self.headers.getheader("new_repo")
-                    new_repo_path=os.path.join(server_settings.service_dir,user_name)
-                    new_repo_path=os.path.join(new_repo_path,new_repo)
+                    new_repo=self.request.headers["new_repo"]
+                    new_repo_path=user_name+"/"+new_repo
+                    
+                    matches=base_class.find(db_name_coll,{"repo_path":new_repo_path})
 
-                    if os.path.exists(new_repo_path):
+                    count=0
+                    for match in matches:
+                        count=count+1
+
+                    if count > 0:
                         data_to_send=dumps("Repo already exist")
                     else:
-                        repo=ivs()
+                        repo=ivs(_server=True)
                         repo_root=new_repo_path
-                        db_name=self.headers.getheader("db_name")
                         repo.set_path(repo_root)
-                        repo.set_dbname(user_name+"_"+db_name)
                         repo.init(True)
-                        temp_ret_struct=base_class.update(users_coll,{"user_name":user_name},{
+                        base_class.update(users_coll,{"user_name":user_name},{
                             "$addToSet" : {
-                                    "repo": user_name+"/"+new_repo
+                                    "repo": new_repo_path
                                 }
                         })
-                        data_to_send=dumps("Initialized new repo "+user_name+"/"+new_repo)
+
+                        temp_entity=db_name_coll()
+                        base_class.insert(temp_entity,db_name_coll,{
+                                "db_name":user_name+"_"+new_repo,
+                                "repo_path":new_repo_path
+                            })
+
+
+                        data_to_send=dumps("Initialized new repo "+new_repo_path)
                     res_code=200
                 else:
-                    repo_path=os.path.abspath(os.path.join(server_settings.service_dir,path))    
-                    ivs_folder=os.path.abspath(os.path.join(repo_path,".ivs"))
-                    db_name_file_name=os.path.abspath(os.path.join(ivs_folder,"db_name"))
+                    matches=base_class.find(db_name_coll,{"repo_path":path})
 
-                    if not os.path.exists(db_name_file_name):
+                    count=0
+                    for match in matches:
+                        count=count+1
+
+                    if count == 0:
                         res_code=404
                     else: 
-                        db_name_file=open(db_name_file_name,"r")
-                        db_name=db_name_file.readline().rstrip("\n")
-                        db_name_file.close()
+                        for match in matches:
+                            break;
+                        db_name=match["db_name"]
 
                         list_commit_uids=[]
                         list_commit_child_ids=[]
@@ -139,11 +155,11 @@ class request_handler(webapp2.RequestHandler):
                             print("push message")
                             print(message)
                             
-                            apply_data(db_name,message,repo_path,server=True)
+                            apply_data(db_name,message,path,server=True)
                             res_code=200
                             data_to_send="Done"
                         elif action=="add_perm":
-                            add_perm_for_user=self.headers.getheader("add_perm_for_user")
+                            add_perm_for_user=self.response.headers["add_perm_for_user"]
                             matches=base_class.find(users_coll,{"user_name":add_perm_for_user})
                             count=0
                             for match in matches:
@@ -161,10 +177,8 @@ class request_handler(webapp2.RequestHandler):
 
                             res_code=200
                         elif action=="serv_del":
-                            repo=ivs()
-                            repo_root=os.path.join(server_settings.service_dir,path)
-                            repo.set_path(repo_root)
-                            repo.set_dbname(db_name)
+                            repo=ivs(_server=True)
+                            repo.set_path(path)
                             repo.delete()
                             base_class.update(users_coll,{},{
                                 "$pull": {
@@ -172,13 +186,12 @@ class request_handler(webapp2.RequestHandler):
                                     }},
                                         multi= True
                             )
-                            shutil.rmtree(repo_root)
                             data_to_send="Deleted repo"
                             
                             res_code=200
                         elif action=="get_need" or action=="pull":
 
-                            for result in base_class.find(commits_coll,{"db_name":db_name },{ 'uid': 1, 'child_ids':1, '_id':0 }):
+                            for result in base_class.find(commits_coll,{"db_name":db_name }):
                                 list_commit_uids.append(result["uid"])
                                 list_commit_child_ids.append(str(result["child_ids"]))
 
@@ -211,16 +224,14 @@ class request_handler(webapp2.RequestHandler):
                                         if len(list_commit_child_ids[i]) > len(message_commit_child_ids[temp_index]):
                                             diff_list.append(list_commit_uids[i])
 
-                                data_to_send=get_data_for_commits(db_name,diff_list,server=True)
+                                data_to_send=get_data_for_commits(db_name,diff_list)
 
                         res_code=200
             else:
                 res_code=403
 
-        self.response.status(res_code)
-        print(res_code)
-        # self.response.write(data_to_send)
-        self.response.write("dsfds")
+        self.response.set_status(res_code)
+        self.response.out.write(data_to_send)
         
 
 app = webapp2.WSGIApplication([

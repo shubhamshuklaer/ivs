@@ -10,6 +10,7 @@ def apply_data(db_name,data,root_path,server=False):
     commits_coll=mongo_db_name_setting.commits_coll
     branches_coll=mongo_db_name_setting.branches_coll
     files_coll=mongo_db_name_setting.files_coll
+    patches_coll=mongo_db_name_setting.patches_coll
     params_coll=mongo_db_name_setting.params_coll
     base_class=mongo_db_name_setting.base_class
 
@@ -84,9 +85,10 @@ def apply_data(db_name,data,root_path,server=False):
                     upsert=True
                     )
 
-        param = repo.params.find_one({"path": root_path})
+        if not server:
+            param = repo.params.find_one({"path": root_path})
 
-        cur_branch_obj=db.branches.find_one({"name":repo.cur_branch})
-        if cur_branch_obj !=None:
-            head_commit_id=cur_branch_obj["head"]
-            repo.rollback(head_commit_id)
+            cur_branch_obj=db.branches.find_one({"name":repo.cur_branch})
+            if cur_branch_obj !=None:
+                head_commit_id=cur_branch_obj["head"]
+                repo.rollback(head_commit_id)

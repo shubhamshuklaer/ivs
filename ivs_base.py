@@ -21,21 +21,21 @@ commits_coll=None
 branches_coll=None
 files_coll=None
 params_coll=None
+patches_coll=None
 base_class=None
 
 
 class ivs:
 	def __init__(self,_server=False):
-		self.conn=None
-		self.db=None
-		self.files =None
-		self.commits =None
-		self.staged =None
-		self.params =None
-		self.patches =None
-		self.branches =None
-		self.ivs =None
-		self.dbname =None
+		# self.conn=None
+		# self.db=None
+		# self.files =None
+		# self.commits =None
+		# self.staged =None
+		# self.params =None
+		# self.patches =None
+		# self.branches =None
+		# self.ivs =None
 		self.first_cid =None
 		self.cur_com_num =None
 		self.last_cid =None
@@ -46,7 +46,7 @@ class ivs:
 		self.patch_obj =None
 		self.path=None
                 self.server=_server
-		self.db_name=mongo_db_name_setting.mongo_db_name
+		self.dbname=mongo_db_name_setting.mongo_db_name
 
                 global mongo_db_name
                 global db_name_coll
@@ -55,12 +55,14 @@ class ivs:
                 global files_coll
                 global params_coll
                 global base_class
+                global patches_coll
 
                 mongo_db_name=mongo_db_name_setting.mongo_db_name
                 db_name_coll=mongo_db_name_setting.db_name_coll
                 commits_coll=mongo_db_name_setting.commits_coll
                 branches_coll=mongo_db_name_setting.branches_coll
                 files_coll=mongo_db_name_setting.files_coll
+                patches_coll=mongo_db_name_setting.patches_coll
                 params_coll=mongo_db_name_setting.params_coll
                 base_class=mongo_db_name_setting.base_class
 	def set_uname(self,name):
@@ -75,17 +77,17 @@ class ivs:
 	def get_path(self):
 		return self.path
 
-	def set_conn(self, conn):
-		self.conn = conn
+	# def set_conn(self, conn):
+		# self.conn = conn
 
-	def get_conn(self):
-		return self.conn
+	# def get_conn(self):
+		# return self.conn
 
-	def set_db(self, db):
-		self.db = db
+	# def set_db(self, db):
+		# self.db = db
 
-	def get_db(self):
-		return self.db
+	# def get_db(self):
+		# return self.db
 
 	# def get_dbname(self):
 		# return self.dbname
@@ -162,21 +164,21 @@ class ivs:
 			)
 
 	def load_params(self):
-		self.set_conn(Connection())
-		self.set_db(self.conn[self.dbname])
+		# self.set_conn(Connection())
+		# self.set_db(self.conn[self.dbname])
 
-		self.files = self.db.files
-		self.commits = self.db.commits
-		self.staged = self.db.staged
-		self.params = self.db.params
-		self.patches = self.db.patches
-		self.branches = self.db.branches
-		self.ivs = self.db.ivs
+		# self.files = self.db.files
+		# self.commits = self.db.commits
+		# self.staged = self.db.staged
+		# self.params = self.db.params
+		# self.patches = self.db.patches
+		# self.branches = self.db.branches
+		# self.ivs = self.db.ivs
 
 		param = base_class.find_one(params_coll,{
                     "db_name": self.dbname,
                     "path": self.path})
-		if(param == None or len(param) == 0):
+		if(param == None):
 			pass
 		else:
 			self.dbname = param["db_name"]
@@ -210,41 +212,42 @@ class ivs:
 		repo_dir=os.path.join(self.path,".ivs")
 
 		if not os.path.exists(os.path.join(self.path, '.ivs')):
-			os.makedirs(os.path.join(self.path, '.ivs'))
+                    if not self.server:
+                        os.makedirs(os.path.join(self.path, '.ivs'))
 
-			print "Loading parameters ..."
-			self.load_params()
+                    print "Loading parameters ..."
+                    self.load_params()
 
-			
-			self.cur_branch = "master"
-			tmp_id = str(ObjectId())
-                        if not server:
-                            temp_entity=commits_coll()
-                            base_class.insert(temp_entity,commits_coll,{
-                                "uid":  tmp_id,
-                                "db_name": self.dbname,
-                                "patch_ids": [],
-                                "ts": time.time(),
-                                "msg": "Initial Commit on master",
-                                "added": [],
-                                "deleted": [],
-                                "parent_id": None,
-                                "branch": self.cur_branch,
-                                "child_ids": [],
-                                "num": 1,
-                                "level": 1
-                                }
-                                )
-                            temp_entity=branches_coll()
-                            base_class.insert(temp_entity,branches_coll,{
-                                "name": "master",
-                                "commit_ids": [],
-                                "db_name": self.dbname,
-                                "head": tmp_id,
-                                "tail": tmp_id,
-                                "parent_branches": []
-                                }
-                                )
+                    
+                    self.cur_branch = "master"
+                    tmp_id = str(ObjectId())
+                    if not server:
+                        temp_entity=commits_coll()
+                        base_class.insert(temp_entity,commits_coll,{
+                            "uid":  tmp_id,
+                            "db_name": self.dbname,
+                            "patch_ids": [],
+                            "ts": time.time(),
+                            "msg": "Initial Commit on master",
+                            "added": [],
+                            "deleted": [],
+                            "parent_id": None,
+                            "branch": self.cur_branch,
+                            "child_ids": [],
+                            "num": 1,
+                            "level": 1
+                            }
+                            )
+                        temp_entity=branches_coll()
+                        base_class.insert(temp_entity,branches_coll,{
+                            "name": "master",
+                            "commit_ids": [],
+                            "db_name": self.dbname,
+                            "head": tmp_id,
+                            "tail": tmp_id,
+                            "parent_branches": []
+                            }
+                            )
 			
 			self.first_cid = tmp_id
 			self.cur_com_num = 1
@@ -252,13 +255,13 @@ class ivs:
 			self.cur_com_level = 1
 			self.cur_patch_num = 0
 			
-			client = MongoClient()
-			dbs = client['ivs']   # the database to store the connections
-	#		dbs.ivs.insert( {'repo': self.dbname } )   # separte entry for each repo
-			# TODO
-	#		dbs.ivs.insert( {'repo': self.dbname , 'user': } )   # separte entry for each repo
+			# client = MongoClient()
+			# dbs = client['ivs']   # the database to store the connections
+	# #		dbs.ivs.insert( {'repo': self.dbname } )   # separte entry for each repo
+			# # TODO
+	# #		dbs.ivs.insert( {'repo': self.dbname , 'user': } )   # separte entry for each repo
 		
-		#	self.ivs.insert( { 'repo': self.dbname } )
+		# #	self.ivs.insert( { 'repo': self.dbname } )
 
 		else:
 			self.delete()
@@ -267,9 +270,10 @@ class ivs:
                 if not server:
                     self.save_params()
 
-		db_name_file=open(os.path.join(repo_dir,"db_name"),'w')
-		db_name_file.write(self.dbname+"\n")
-		db_name_file.close()
+                if not self.server:
+                    db_name_file=open(os.path.join(repo_dir,"db_name"),'w')
+                    db_name_file.write(self.dbname+"\n")
+                    db_name_file.close()
 
 	def is_all_committed(self):
             entries = base_class.find(files_coll,{"db_name":self.dbname,"is_present": True})
@@ -379,7 +383,7 @@ class ivs:
 						continue
 					entry = base_class.find_one(files_coll,{"db_name":self.dbname,"path": os.path.relpath(os.path.join(root, f), self.path)})
 					
-					if(entry == None or len(entry) == 0):
+					if(entry == None):
                                                 temp_entity=files_coll()
 						base_class.insert(temp_entity,files_coll,{
 								"name": str(os.path.relpath(os.path.join(root, f), self.path)), 
@@ -416,7 +420,7 @@ class ivs:
 			return	
 		else:
 			entry = base_class.find_one(files_coll,{"db_name":self.dbname,"path": path})
-			if(entry == None or len(entry) == 0):
+			if(entry == None):
 
 				print "Staging new file: " + str(path)
                                 temp_entity=files_coll()
@@ -530,8 +534,12 @@ class ivs:
 				)
 				(tmp_txt, data) = self.get_diff(entry)
 				patches = self.dmp.patch_make(data.decode('utf-8'), "".decode('utf-8'))
-				
-				if(len(patches) > 0):
+
+                                count=0
+                                for match in patches:
+                                    count=count+1
+
+				if( count > 0):
 					
 					base_class.update(commits_coll,{
                                                 "db_name": self.dbname,
@@ -606,7 +614,12 @@ class ivs:
 				(tmp_txt, data) = self.get_diff(entry)
 				# print type(tmp_txt) 
 				patches = self.dmp.patch_make(tmp_txt, data.decode('utf-8'))
-				if(len(patches) > 0):
+
+                                count=0
+                                for match in patches:
+                                    count=count+1
+
+				if( count > 0):
 					print "Committing : " + str(entry["path"])
 					base_class.update(commits_coll,{
                                                 "db_name": self.dbname,
@@ -676,7 +689,12 @@ class ivs:
 				(tmp_txt, data) = self.get_diff(entry)
 				# print type(tmp_txt) 
 				patches = self.dmp.patch_make(tmp_txt, data.decode('utf-8'))
-				if(len(patches) > 0):
+                                
+                                count=0
+                                for match in patches:
+                                    count=count+1
+
+				if(count > 0):
 					print "Committing : " + str(entry["path"])
 					
 					base_class.update(commits_coll,{
@@ -926,12 +944,18 @@ class ivs:
 	def delete(self):
 		self.load_params()
 		print "Deleting"
-		self.db.drop_collection('files')
-		self.db.drop_collection('commits')
-		self.db.drop_collection('staged')
-		self.conn.drop_database(self.dbname)
-
-		shutil.rmtree(os.path.join(self.path, '.ivs'))
+                    
+                base_class.delete(commits_coll,{"db_name":self.dbname}) 
+                base_class.delete(params_coll,{"db_name":self.dbname}) 
+                base_class.delete(branches_coll,{"db_name":self.dbname}) 
+                base_class.delete(patches_coll,{"db_name":self.dbname}) 
+                base_class.delete(files_coll,{"db_name":self.dbname}) 
+                
+                # self.db.drop_collection('files')
+                # self.db.drop_collection('commits')
+                # self.db.drop_collection('staged')
+                if not self.server:
+                    shutil.rmtree(os.path.join(self.path, '.ivs'))
 
 	# def show(self, col, name):
 		# print "Showing: " + name

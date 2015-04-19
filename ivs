@@ -28,8 +28,9 @@ mongo_db_name_setting.db_name_coll=ret_list[0]
 mongo_db_name_setting.commits_coll=ret_list[1]
 mongo_db_name_setting.branches_coll=ret_list[2]
 mongo_db_name_setting.files_coll=ret_list[3]
-mongo_db_name_setting.params_coll=ret_list[4]
-mongo_db_name_setting.base_class=ret_list[5]
+mongo_db_name_setting.patches_coll=ret_list[4]
+mongo_db_name_setting.params_coll=ret_list[5]
+mongo_db_name_setting.base_class=ret_list[6]
 
 
 mongo_db_name=mongo_db_name_setting.mongo_db_name
@@ -37,13 +38,14 @@ db_name_coll=mongo_db_name_setting.db_name_coll
 commits_coll=mongo_db_name_setting.commits_coll
 branches_coll=mongo_db_name_setting.branches_coll
 files_coll=mongo_db_name_setting.files_coll
+patches_coll=mongo_db_name_setting.patches_coll
 params_coll=mongo_db_name_setting.params_coll
 base_class=mongo_db_name_setting.base_class
 
 user_name=""
 passwd=""
 repo_root=""
-repo=ivs(mongo_db_name_setting.mongo_db_name)
+repo=ivs()
 
 one_arg_args=["status","delete","log"]
 two_arg_args=["init","bare_init","add","push","pull","commit","rm","branch","chkout","rollback","user_add","add_perm","serv_del","serv_create"]
@@ -128,13 +130,9 @@ def get_push_data():
     return get_data_for_commits(db_name,need_list)
 
 def get_pull_data():
-    global mongo_client
-    global db
-    mongo_client=Connection()
-    db=mongo_client[db_name]
     list_commit_uids=[]
     list_commit_child_ids=[]
-    for result in db.commits.find({ },{ 'uid': 1, 'child_ids':1, '_id':0 }):
+    for result in base_class.find(commits_coll,{"db_name":db_name}):
         list_commit_uids.append(result["uid"])
         list_commit_child_ids.append(str(result["child_ids"]))
     
@@ -261,8 +259,7 @@ if arg_list[0] in valid_args:
         get_auth()
         if arg_list[0] == "serv_create":
             new_repo_name=raw_input("Enter new repo name : ")
-            new_db_name=new_repo_name
-            header_add={"user":user_name,"passwd":passwd,"new_repo":new_repo_name,"db_name":new_db_name}
+            header_add={"user":user_name,"passwd":passwd,"new_repo":new_repo_name}
             process(arg_list[1],"serv_create",None,process_serv_create,header_add)
         elif arg_list[0] == "serv_del":
             header_add={"user":user_name,"passwd":passwd}

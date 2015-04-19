@@ -4,13 +4,13 @@ def define_classes(server=False):
     if server:
         from google.appengine.ext import db
         
-        class _base_class:
+        class base_class:
 
             @staticmethod
             def insert(obj,_class,input_dict):
                 for key in input_dict:
                     setattr(obj,key,input_dict[key])
-                self.put()
+                obj.put()
 
             @staticmethod
             def update_entity(entity,_class,update_dict):
@@ -21,7 +21,10 @@ def define_classes(server=False):
                     elif key == "$addToSet":
                         for temp_key in update_dict[key]:
                             temp_list=getattr(entity,temp_key)
-                            temp_list=temp_list+update_dict[key][temp_key]
+                            if type(update_dict[key][temp_key]) is list:
+                                temp_list=temp_list+update_dict[key][temp_key]
+                            else:
+                                temp_list.append(update_dict[key][temp_key])
                             setattr(entity,temp_key,temp_list)
                     elif key == "$pull":
                         for temp_key in update_dict[key]:
@@ -54,22 +57,25 @@ def define_classes(server=False):
                     temp_entity.insert(update_dict)
                 elif count>0:
                     if not multi:
-                        match=matches[0]
-                        update_entity(match,update_dict)
+                        for match in matches:
+                            break
+                        base_class.update_entity(match,_class,update_dict)
                     else:
                         for match in matches:
-                            update_entity(match,update_dict)
+                            base_class.update_entity(match,_class,update_dict)
 
             @staticmethod
             def find_one(_class,search_dict):
-                res=_base_class.find(_class,search_dict)
+                matches=base_class.find(_class,search_dict)
                 
                 count=0
                 for match in matches:
                     count=count+1
 
                 if count>0:
-                    return res[0]
+                    for match in matches:
+                        break
+                    return match
                 else:
                     return None
 
@@ -85,71 +91,84 @@ def define_classes(server=False):
                         print(_class)
                         res.filter(key+" =",val)
 
-                return res.run()
+                matches=res.run()
+                match_dict_list=[]
+
+                for match in matches:
+                    match_dict_list.append(db.to_dict(match))
+
+                return match_dict_list
+
+
+            @staticmethod
+            def delete(_class,search_dict):
+                matches=base_class.find(_class,search_dict)
+                for match in matches:
+                    match.delete()
                 
-        class _db_name_coll(db.Model):
-            repo_path=db.StringProperty(required=True)
-            db_name=db.StringProperty(required=True)
+        class db_name_coll(db.Model):
+            repo_path=db.StringProperty()
+            db_name=db.StringProperty()
 
-        class _commits_coll(db.Model):
-            uid=db.StringProperty(required=True)
-            patch_ids=db.StringListProperty(required=True)
-            ts=db.DateTimeProperty(required=True)
-            msg=db.StringProperty(required=True)
-            added=db.StringListProperty(required=True)
-            deleted=db.StringListProperty(required=True)
-            parent_id=db.StringProperty(required=True)
-            branch=db.StringProperty(required=True)
-            child_ids=db.StringListProperty(required=True)
-            num=db.IntegerProperty(required=True)
-            level=db.IntegerProperty(required=True)
-            db_name=db.StringProperty(required=True)
+        class commits_coll(db.Model):
+            uid=db.StringProperty()
+            patch_ids=db.StringListProperty()
+            ts=db.DateTimeProperty()
+            msg=db.StringProperty()
+            added=db.StringListProperty()
+            deleted=db.StringListProperty()
+            parent_id=db.StringProperty()
+            branch=db.StringProperty()
+            child_ids=db.StringListProperty()
+            num=db.IntegerProperty()
+            level=db.IntegerProperty()
+            db_name=db.StringProperty()
 
-        class _branches_coll(db.Model):
-            name=db.StringProperty(required=True)
-            commit_ids=db.StringListProperty(required=True)
-            head=db.StringProperty(required=True)
-            tail=db.StringProperty(required=True)
-            parent_branches=db.StringListProperty(required=True)
-            db_name=db.StringProperty(required=True)
+        class branches_coll(db.Model):
+            name=db.StringProperty()
+            commit_ids=db.StringListProperty()
+            head=db.StringProperty()
+            tail=db.StringProperty()
+            parent_branches=db.StringListProperty()
+            db_name=db.StringProperty()
 
-        class _files_coll(db.Model):
-            name=db.StringProperty(required=True)
-            path=db.StringProperty(required=True)
-            staged=db.BooleanProperty(required=True)
-            staged_ts=db.DateTimeProperty(required=True)
-            patch_ids=db.StringListProperty(required=True)
-            is_present=db.BooleanProperty(required=True)
-            to_remove=db.BooleanProperty(required=True)
-            to_add=db.BooleanProperty(required=True)
-            added_cids=db.StringListProperty(required=True)
-            deleted_cids=db.StringListProperty(required=True)
-            db_name=db.StringProperty(required=True)
+        class files_coll(db.Model):
+            name=db.StringProperty()
+            path=db.StringProperty()
+            staged=db.BooleanProperty()
+            staged_ts=db.DateTimeProperty()
+            patch_ids=db.StringListProperty()
+            is_present=db.BooleanProperty()
+            to_remove=db.BooleanProperty()
+            to_add=db.BooleanProperty()
+            added_cids=db.StringListProperty()
+            deleted_cids=db.StringListProperty()
+            db_name=db.StringProperty()
 
-        class _patches_coll(db.Model):
-            uid=db.StringProperty(required=True)
-            diff_dict=db.StringProperty(required=True)
-            num=db.IntegerProperty(required=True)
-            file_path=db.StringProperty(required=True)
-            cid=db.StringProperty(required=True)
-            branch=db.StringProperty(required=True)
-            db_name=db.StringProperty(required=True)
+        class patches_coll(db.Model):
+            uid=db.StringProperty()
+            diff_dict=db.StringProperty()
+            num=db.IntegerProperty()
+            file_path=db.StringProperty()
+            cid=db.StringProperty()
+            branch=db.StringProperty()
+            db_name=db.StringProperty()
 
-        class _params_coll(db.Model):
-            path=db.StringProperty(required=True)
-            db_name=db.StringProperty(required=True)
-            first_cid=db.StringProperty(required=True)
-            cur_com_num=db.IntegerProperty(required=True)
-            last_cid=db.StringProperty(required=True)
-            cur_com_level=db.StringProperty(required=True)
-            cur_branch=db.IntegerProperty(required=True)
-            cur_patch_num=db.IntegerProperty(required=True)
-            db_name=db.StringProperty(required=True)
+        class params_coll(db.Model):
+            path=db.StringProperty()
+            db_name=db.StringProperty()
+            first_cid=db.StringProperty()
+            cur_com_num=db.IntegerProperty()
+            last_cid=db.StringProperty()
+            cur_com_level=db.StringProperty()
+            cur_branch=db.IntegerProperty()
+            cur_patch_num=db.IntegerProperty()
+            db_name=db.StringProperty()
 
     else:
         from pymongo import Connection
 
-        class _base_class():
+        class base_class():
             @staticmethod
             def insert(obj,_class,input_dict):
                 for key in input_dict:
@@ -170,10 +189,12 @@ def define_classes(server=False):
 
             @staticmethod
             def find_one(_class,search_dict):
-                res=_base_class.find(_class,search_dict)
+                matches=base_class.find(_class,search_dict)
 
-                if res.count()>0:
-                    return res[0]
+                if matches.count()>0:
+                    for match in matches:
+                        break
+                    return match
                 else:
                     return None
 
@@ -184,12 +205,20 @@ def define_classes(server=False):
                 coll_name=_class().__class__.__name__[:-5] # removing the _coll from end
                 return db[coll_name].find(search_dict)
 
-        class _db_name_coll():
+
+            @staticmethod
+            def delete(_class,search_dict):
+                coll_name=_class().__class__.__name__[:-5]
+                mongo_conn=Connection()
+                db=mongo_conn[mongo_db_name_setting.mongo_db_name]
+                db[coll_name].remove(search_dict)
+
+        class db_name_coll():
             def __init__(self):
                 self.repo_path=""
                 self.db_name=""
 
-        class _commits_coll():
+        class commits_coll():
             def __init__(self):
                 self.uid=""
                 self.patch_ids=[]
@@ -204,7 +233,7 @@ def define_classes(server=False):
                 self.level=None
                 self.db_name=""
 
-        class _branches_coll():
+        class branches_coll():
             def __init__(self):
                 self.name=""
                 self.commit_ids=[]
@@ -213,7 +242,7 @@ def define_classes(server=False):
                 self.parent_branches=[]
                 self.db_name=""
 
-        class _files_coll():
+        class files_coll():
             def __init__(self):
                 self.name=""
                 self.path=""
@@ -227,7 +256,7 @@ def define_classes(server=False):
                 self.deleted_cids=[]
                 self.db_name=""
 
-        class _patches_coll():
+        class patches_coll():
             def __init__(self):
                 self.uid=""
                 self.diff_dict=""
@@ -237,7 +266,7 @@ def define_classes(server=False):
                 self.branch=""
                 self.db_name=""
 
-        class _params_coll():
+        class params_coll():
             def __init__(self):
                 self.path=""
                 self.db_name=""
@@ -248,4 +277,4 @@ def define_classes(server=False):
                 self.cur_branch=None
                 self.cur_patch_num=None
 
-    return [_db_name_coll,_commits_coll,_branches_coll,_files_coll,_params_coll,_base_class]
+    return [db_name_coll,commits_coll,branches_coll,files_coll,patches_coll,params_coll,base_class]

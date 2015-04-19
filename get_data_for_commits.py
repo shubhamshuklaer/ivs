@@ -9,6 +9,7 @@ def get_data_for_commits(db_name,commit_uid_list):
         commits_coll=mongo_db_name_setting.commits_coll
         branches_coll=mongo_db_name_setting.branches_coll
         files_coll=mongo_db_name_setting.files_coll
+        patches_coll=mongo_db_name_setting.patches_coll
         params_coll=mongo_db_name_setting.params_coll
         base_class=mongo_db_name_setting.base_class
 
