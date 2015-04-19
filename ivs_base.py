@@ -212,44 +212,43 @@ class ivs:
 		repo_dir=os.path.join(self.path,".ivs")
 
 		if not os.path.exists(os.path.join(self.path, '.ivs')):
-                    if not self.server:
-                        os.makedirs(os.path.join(self.path, '.ivs'))
+			if not self.server:
+				os.makedirs(os.path.join(self.path, '.ivs'))
 
-                    print "Loading parameters ..."
-                    self.load_params()
+			print "Loading parameters ..."
+			self.load_params()
 
-                    
-                    self.cur_branch = "master"
-                    tmp_id = str(ObjectId())
+			
+			self.cur_branch = "master"
+			tmp_id = str(ObjectId())
 
-
-                    if not server:
-                        temp_entity=commits_coll()
-                        base_class.insert(temp_entity,commits_coll,{
-                            "uid":  tmp_id,
-                            "db_name": self.dbname,
-                            "patch_ids": [],
-                            "ts": time.time(),
-                            "msg": "Initial Commit on master",
-                            "added": [],
-                            "deleted": [],
-                            "parent_id": None,
-                            "branch": self.cur_branch,
-                            "child_ids": [],
-                            "num": 1,
-                            "level": 1
-                            }
-                            )
-                        temp_entity=branches_coll()
-                        base_class.insert(temp_entity,branches_coll,{
-                            "name": "master",
-                            "commit_ids": [],
-                            "db_name": self.dbname,
-                            "head": tmp_id,
-                            "tail": tmp_id,
-                            "parent_branches": []
-                            }
-                            )
+			if not server:
+				temp_entity=commits_coll()
+				base_class.insert(temp_entity,commits_coll,{
+					"uid":  tmp_id,
+					"db_name": self.dbname,
+					"patch_ids": [],
+					"ts": time.time(),
+					"msg": "Initial Commit on master",
+					"added": [],
+					"deleted": [],
+					"parent_id": None,
+					"branch": self.cur_branch,
+					"child_ids": [],
+					"num": 1,
+					"level": 1
+					}
+					)
+				temp_entity=branches_coll()
+				base_class.insert(temp_entity,branches_coll,{
+					"name": "master",
+					"commit_ids": [],
+					"db_name": self.dbname,
+					"head": tmp_id,
+					"tail": tmp_id,
+					"parent_branches": []
+					}
+					)
 			
 			self.first_cid = tmp_id
 			self.cur_com_num = 1
@@ -269,13 +268,13 @@ class ivs:
 			self.delete()
 			self.init(server)
 
-                if not server:
-                    self.save_params()
+			if not server:
+				self.save_params()
 
-                if not self.server:
-                    db_name_file=open(os.path.join(repo_dir,"db_name"),'w')
-                    db_name_file.write(self.dbname+"\n")
-                    db_name_file.close()
+			if not self.server:
+				db_name_file=open(os.path.join(repo_dir,"db_name"),'w')
+				db_name_file.write(self.dbname+"\n")
+				db_name_file.close()
 
 	def is_all_committed(self):
             entries = base_class.find(files_coll,{"db_name":self.dbname,"is_present": True})

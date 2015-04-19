@@ -40,8 +40,7 @@ def apply_data(db_name,data,root_path,server=False):
                     },
                     "$addToSet": { "child_ids" :{"$each": commit["child_ids"]}}
                     },
-                upsert=True,
-				obj=commits_coll()
+                upsert=True
                 )
 
     for patch in patches_list:
@@ -68,8 +67,7 @@ def apply_data(db_name,data,root_path,server=False):
 						"parent_branches": branch["parent_branches"],
 						}
 					},
-				upsert=True,
-				obj=branches_coll()
+				upsert=True
 				)
 
 
@@ -97,8 +95,7 @@ def apply_data(db_name,data,root_path,server=False):
 							"cur_patch_num": param_entry["cur_patch_num"],
 							}
 						},
-					upsert=True,
-					obj=params_coll()
+					upsert=True
 					)
 
         if not server:

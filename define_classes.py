@@ -58,7 +58,7 @@ def define_classes(server=False):
 
 
             @staticmethod
-            def update(_class,search_dict,update_dict,upsert=False,multi=False,obj=None):
+            def update(_class,search_dict,update_dict,upsert=False,multi=False):
                 res=_class.all()
                 for key in search_dict:
                     val=search_dict[key]
@@ -78,7 +78,8 @@ def define_classes(server=False):
                 matches=matches_copy
 
                 if count==0 and upsert:
-                    base_class.insert(obj,_class,update_dict)
+					obj=_class()
+					base_class.insert(obj,_class,update_dict)
                 elif count>0:
                     if not multi:
                         for match in matches:
@@ -120,26 +121,101 @@ def define_classes(server=False):
 
             @staticmethod
             def find(_class,search_dict):
-                print("fdsdsafsafasdfsadfasdfsad")
-                print(search_dict)
-                res=_class.all()
-                print(_class)
-                for key in search_dict:
-                    val=search_dict[key]
-                    if type(val) is dict:
-                        if "$in" in val:
-                            res.filter(key+" IN",val["$in"])
-                    else:
-                        res.filter(key+" =",val)
+				print("fdsdsafsafasdfsadfasdfsad")
+				print(search_dict)
+				res=_class.all()
+				print(_class)
+				for key in search_dict:
+					val=search_dict[key]
+					if type(val) is dict:
+						if "$in" in val:
+							res.filter(key+" IN",val["$in"])
+					else:
+						res.filter(key+" =",val)
 
-                matches=res.run()
-                match_dict_list=[]
+				matches=res.run()
+				match_dict_list=[]
 
-                for match in matches:
-                    match_dict_list.append(db.to_dict(match))
-                    print("hellllll")
+				class_name=_class().__class__.__name__[:-5]
 
-                return match_dict_list
+
+
+				for match in matches:
+					if class_name == "files":
+						temp_dict={
+								"name":None,
+								"path":None,
+								"staged":None,
+								"staged_ts":None,
+								"patch_ids":[],
+								"is_present":None,
+								"to_remove":None,
+								"to_add":None,
+								"added_cids":[],
+								"deleted_cids":[],
+								"db_name":None,
+								}
+					elif class_name == "commits":
+						temp_dict={
+								"uid":None,
+								"patch_ids":[],
+								"ts":None,
+								"msg":None,
+								"added":[],
+								"deleted":[],
+								"parent_id":None,
+								"branch":None,
+								"child_ids":[],
+								"num":None,
+								"level":None,
+								"db_name":None,
+								}
+					elif class_name == "db_name":
+						temp_dict={
+								"repo_path":None,
+								"db_name":None,
+								}
+					elif class_name == "patches":
+						temp_dict={
+								"uid":None,
+								"diff_dict":None,
+								"num":None,
+								"file_path":None,
+								"cid":None,
+								"branch":None,
+								"db_name":None,
+								}
+					elif class_name == "branches":
+						temp_dict={
+								"name":None,
+								"commit_ids":[],
+								"head":None,
+								"tail":None,
+								"parent_branches":[],
+								"db_name":None,
+								}
+					elif class_name == "params":
+						temp_dict={
+								"path":None,
+								"db_name":None,
+								"first_cid":None,
+								"cur_com_num":None,
+								"last_cid":None,
+								"cur_com_level":None,
+								"cur_branch":None,
+								"cur_patch_num":None,
+								"db_name":None,
+								}
+					elif class_name == "users":
+						temp_dict={
+								"user_name":None,
+								"passed":None,
+								"repo":[]
+								}
+					match_dict_list.append(db.to_dict(match,temp_dict))
+					print("hellllll")
+
+				return match_dict_list
 
 
             @staticmethod
@@ -149,63 +225,63 @@ def define_classes(server=False):
                     match.delete()
                 
         class db_name_coll(db.Model):
-            repo_path=db.StringProperty()
-            db_name=db.StringProperty()
+            repo_path=db.StringProperty(default=None)
+            db_name=db.StringProperty(default=None)
 
         class commits_coll(db.Model):
-            uid=db.StringProperty()
-            patch_ids=db.StringListProperty()
-            ts=db.FloatProperty
-            msg=db.StringProperty()
-            added=db.StringListProperty()
-            deleted=db.StringListProperty()
-            parent_id=db.StringProperty()
-            branch=db.StringProperty()
-            child_ids=db.StringListProperty()
-            num=db.IntegerProperty()
-            level=db.IntegerProperty()
-            db_name=db.StringProperty()
+            uid=db.StringProperty(default=None)
+            patch_ids=db.StringListProperty(default=[])
+            ts=db.FloatProperty(default=None)
+            msg=db.StringProperty(default=None)
+            added=db.StringListProperty(default=[])
+            deleted=db.StringListProperty(default=[])
+            parent_id=db.StringProperty(default=None)
+            branch=db.StringProperty(default=None)
+            child_ids=db.StringListProperty(default=[])
+            num=db.IntegerProperty(default=None)
+            level=db.IntegerProperty(default=None)
+            db_name=db.StringProperty(default=None)
 
         class branches_coll(db.Model):
-            name=db.StringProperty()
-            commit_ids=db.StringListProperty()
-            head=db.StringProperty()
-            tail=db.StringProperty()
-            parent_branches=db.StringListProperty()
-            db_name=db.StringProperty()
+            name=db.StringProperty(default=None)
+            commit_ids=db.StringListProperty(default=[])
+            head=db.StringProperty(default=None)
+            tail=db.StringProperty(default=None)
+            parent_branches=db.StringListProperty(default=[])
+            db_name=db.StringProperty(default=None)
 
         class files_coll(db.Model):
-            name=db.StringProperty()
-            path=db.StringProperty()
-            staged=db.BooleanProperty()
-            staged_ts=db.FloatProperty
-            patch_ids=db.StringListProperty()
-            is_present=db.BooleanProperty()
-            to_remove=db.BooleanProperty()
-            to_add=db.BooleanProperty()
-            added_cids=db.StringListProperty()
-            deleted_cids=db.StringListProperty()
-            db_name=db.StringProperty()
+            name=db.StringProperty(default=None)
+            path=db.StringProperty(default=None)
+            staged=db.BooleanProperty(default=None)
+            staged_ts=db.FloatProperty(default=None)
+            patch_ids=db.StringListProperty(default=[])
+            is_present=db.BooleanProperty(default=None)
+            to_remove=db.BooleanProperty(default=None)
+            to_add=db.BooleanProperty(default=None)
+            added_cids=db.StringListProperty(default=[])
+            deleted_cids=db.StringListProperty(default=[])
+            db_name=db.StringProperty(default=None)
 
         class patches_coll(db.Model):
-            uid=db.StringProperty()
-            diff_dict=db.StringProperty()
-            num=db.IntegerProperty()
-            file_path=db.StringProperty()
-            cid=db.StringProperty()
-            branch=db.StringProperty()
-            db_name=db.StringProperty()
+            uid=db.StringProperty(default=None)
+            diff_dict=db.StringProperty(default=None)
+            num=db.IntegerProperty(default=None)
+            file_path=db.StringProperty(default=None)
+            cid=db.StringProperty(default=None)
+            branch=db.StringProperty(default=None)
+            db_name=db.StringProperty(default=None)
 
         class params_coll(db.Model):
-            path=db.StringProperty()
-            db_name=db.StringProperty()
-            first_cid=db.StringProperty()
-            cur_com_num=db.IntegerProperty()
-            last_cid=db.StringProperty()
-            cur_com_level=db.StringProperty()
-            cur_branch=db.IntegerProperty()
-            cur_patch_num=db.IntegerProperty()
-            db_name=db.StringProperty()
+            path=db.StringProperty(default=None)
+            db_name=db.StringProperty(default=None)
+            first_cid=db.StringProperty(default=None)
+            cur_com_num=db.IntegerProperty(default=None)
+            last_cid=db.StringProperty(default=None)
+            cur_com_level=db.StringProperty(default=None)
+            cur_branch=db.IntegerProperty(default=None)
+            cur_patch_num=db.IntegerProperty(default=None)
+            db_name=db.StringProperty(default=None)
 
     else:
         from pymongo import Connection
