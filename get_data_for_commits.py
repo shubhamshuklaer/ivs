@@ -45,8 +45,9 @@ def get_data_for_commits(db_name,commit_uid_list):
 		selected_branches_list.append(entity)
 
 	if len(selected_commits_list)>0:
-            param_entry=base_class.find_one({"db_name":db_name})
+            param_entry=base_class.find_one(params_coll,{"db_name":db_name})
 
 	result={"commits":selected_commits_list,"patches":selected_patches_list,"branches":selected_branches_list,"params":param_entry}
+        print(selected_commits_list)
 
 	return dumps(result)

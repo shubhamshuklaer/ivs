@@ -1,4 +1,5 @@
 import mongo_db_name_setting
+import itertools
 
 def define_classes(server=False):
     if server:
@@ -9,7 +10,22 @@ def define_classes(server=False):
             @staticmethod
             def insert(obj,_class,input_dict):
                 for key in input_dict:
-                    setattr(obj,key,input_dict[key])
+                    if key=="$set":
+                        for temp_key in input_dict[key]:
+                            setattr(obj,temp_key,input_dict[key][temp_key])
+                            print(temp_key,getattr(obj,temp_key))
+                    elif key=="$addToSet":
+                        for temp_key in input_dict[key]:
+                            temp_val=input_dict[key][temp_key]
+                            if type(temp_val) is dict:
+                                temp_val=temp_val["$each"]
+                                print("fdsfsadfasd")
+                            else:
+                                temp_val=[temp_val]
+                            setattr(obj,temp_key,temp_val)
+                            print(temp_key,getattr(obj,temp_key))
+                    else:
+                        setattr(obj,key,input_dict[key])
                 obj.put()
 
             @staticmethod
@@ -21,15 +37,20 @@ def define_classes(server=False):
                     elif key == "$addToSet":
                         for temp_key in update_dict[key]:
                             temp_list=getattr(entity,temp_key)
-                            if type(update_dict[key][temp_key]) is list:
-                                temp_list=temp_list+update_dict[key][temp_key]
+                            if type(update_dict[key][temp_key]) is dict:
+                                for temp_elem in update_dict[key][temp_key]["$each"]:
+                                    if temp_elem not in temp_list:
+                                        temp_list.append(temp_elem)
                             else:
-                                temp_list.append(update_dict[key][temp_key])
+                                temp_elem=update_dict[key][temp_key]
+                                if temp_elem not in temp_list:
+                                    temp_list.append(temp_elem)
                             setattr(entity,temp_key,temp_list)
                     elif key == "$pull":
                         for temp_key in update_dict[key]:
                             temp_list=getattr(entity,temp_key)
                             temp_list.remove(update_dict[key][temp_key])
+                            print(temp_key,temp_list)
                             setattr(entity,temp_key,temp_list)
                     
                 entity.put()
@@ -47,14 +68,17 @@ def define_classes(server=False):
                         res.filter(key+" =",val)
 
                 matches=res.run()
+                matches_copy,matches=itertools.tee(matches)
 
                 count=0
                 for match in matches:
                     count=count+1
 
+                matches=matches_copy
+
                 if count==0 and upsert:
                     temp_entity=_class()
-                    temp_entity.insert(update_dict)
+                    base_class.insert(temp_entity,_class,update_dict)
                 elif count>0:
                     if not multi:
                         for match in matches:
@@ -80,6 +104,21 @@ def define_classes(server=False):
                     return None
 
             @staticmethod
+            def find_entities(_class,search_dict):
+                res=_class.all()
+                for key in search_dict:
+                    val=search_dict[key]
+                    if type(val) is dict:
+                        if "$in" in val:
+                            res.filter(key+" IN",val["$in"])
+                    else:
+                        print(_class)
+                        res.filter(key+" =",val)
+
+                matches=res.run()
+                return matches
+
+            @staticmethod
             def find(_class,search_dict):
                 res=_class.all()
                 for key in search_dict:
@@ -102,7 +141,7 @@ def define_classes(server=False):
 
             @staticmethod
             def delete(_class,search_dict):
-                matches=base_class.find(_class,search_dict)
+                matches=base_class.find_entities(_class,search_dict)
                 for match in matches:
                     match.delete()
                 
@@ -113,7 +152,7 @@ def define_classes(server=False):
         class commits_coll(db.Model):
             uid=db.StringProperty()
             patch_ids=db.StringListProperty()
-            ts=db.DateTimeProperty()
+            ts=db.FloatProperty
             msg=db.StringProperty()
             added=db.StringListProperty()
             deleted=db.StringListProperty()
@@ -136,7 +175,7 @@ def define_classes(server=False):
             name=db.StringProperty()
             path=db.StringProperty()
             staged=db.BooleanProperty()
-            staged_ts=db.DateTimeProperty()
+            staged_ts=db.FloatProperty
             patch_ids=db.StringListProperty()
             is_present=db.BooleanProperty()
             to_remove=db.BooleanProperty()
@@ -203,7 +242,7 @@ def define_classes(server=False):
                 mongo_conn=Connection()
                 db=mongo_conn[mongo_db_name_setting.mongo_db_name]
                 coll_name=_class().__class__.__name__[:-5] # removing the _coll from end
-                return db[coll_name].find(search_dict)
+                return db[coll_name].find(search_dict,{"_id":0})
 
 
             @staticmethod

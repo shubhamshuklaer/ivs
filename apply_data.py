@@ -35,7 +35,7 @@ def apply_data(db_name,data,root_path,server=False):
                         "num": commit["num"],
                         "level": commit["level"]
                     },
-                    "$addToSet": { "child_ids" :{"$each": commit["child_ids"]}},
+                    "$addToSet": { "child_ids" :{"$each": commit["child_ids"]}}
                     },
                 upsert=True
                 )
@@ -64,6 +64,7 @@ def apply_data(db_name,data,root_path,server=False):
         print("Generating code")
         repo=ivs()
         repo.set_path(root_path)
+        repo.set_dbname(db_name)
         repo.load_params()
         if repo.cur_branch == None:
             repo.cur_branch="master"
@@ -76,7 +77,7 @@ def apply_data(db_name,data,root_path,server=False):
                             "db_name": db_name,
                             "first_cid": param_entry["first_cid"],
                             "cur_com_num": param_entry["cur_com_num"],
-                            "last_cid": db.branches.find_one({"name":repo.cur_branch})["head"],
+                            "last_cid": base_class.find_one(branches_coll,{"db_name":db_name,"name":repo.cur_branch})["head"],
                             "cur_com_level": param_entry["cur_com_level"],
                             "cur_branch": repo.cur_branch,
                             "cur_patch_num": param_entry["cur_patch_num"],
@@ -88,7 +89,7 @@ def apply_data(db_name,data,root_path,server=False):
         if not server:
             param = repo.params.find_one({"path": root_path})
 
-            cur_branch_obj=db.branches.find_one({"name":repo.cur_branch})
+            cur_branch_obj=base_class.find_one(branches_coll,{"db_name":db_name,"name":repo.cur_branch})
             if cur_branch_obj !=None:
                 head_commit_id=cur_branch_obj["head"]
                 repo.rollback(head_commit_id)

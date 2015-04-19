@@ -116,6 +116,7 @@ class request_handler(webapp2.RequestHandler):
                         repo=ivs(_server=True)
                         repo_root=new_repo_path
                         repo.set_path(repo_root)
+                        repo.set_dbname(user_name+"_"+new_repo)
                         repo.init(True)
                         base_class.update(users_coll,{"user_name":user_name},{
                             "$addToSet" : {
@@ -159,7 +160,7 @@ class request_handler(webapp2.RequestHandler):
                             res_code=200
                             data_to_send="Done"
                         elif action=="add_perm":
-                            add_perm_for_user=self.response.headers["add_perm_for_user"]
+                            add_perm_for_user=self.request.headers["add_perm_for_user"]
                             matches=base_class.find(users_coll,{"user_name":add_perm_for_user})
                             count=0
                             for match in matches:
@@ -179,6 +180,10 @@ class request_handler(webapp2.RequestHandler):
                         elif action=="serv_del":
                             repo=ivs(_server=True)
                             repo.set_path(path)
+                            temp_str="_"
+                            db_name=path.split("/")
+                            db_name=temp_str.join(db_name)
+                            repo.set_dbname(db_name)
                             repo.delete()
                             base_class.update(users_coll,{},{
                                 "$pull": {
@@ -186,6 +191,8 @@ class request_handler(webapp2.RequestHandler):
                                     }},
                                         multi= True
                             )
+
+                            base_class.delete(db_name_coll,{"repo_path":path})
                             data_to_send="Deleted repo"
                             
                             res_code=200

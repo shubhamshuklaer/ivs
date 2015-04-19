@@ -46,7 +46,7 @@ class ivs:
 		self.patch_obj =None
 		self.path=None
                 self.server=_server
-		self.dbname=mongo_db_name_setting.mongo_db_name
+		self.dbname=None
 
                 global mongo_db_name
                 global db_name_coll
@@ -89,11 +89,11 @@ class ivs:
 	# def get_db(self):
 		# return self.db
 
-	# def get_dbname(self):
-		# return self.dbname
+        def get_dbname(self):
+                return self.dbname
 
-	# def set_dbname(self, name):
-		# self.dbname = name
+        def set_dbname(self, name):
+                self.dbname = name
 
 	def get_next_com_num(self):
 		self.cur_com_num += 1
@@ -221,6 +221,8 @@ class ivs:
                     
                     self.cur_branch = "master"
                     tmp_id = str(ObjectId())
+
+
                     if not server:
                         temp_entity=commits_coll()
                         base_class.insert(temp_entity,commits_coll,{
@@ -556,6 +558,7 @@ class ivs:
 					for patch in patches:
 						pid = str(ObjectId())
                                                 temp_entity=patches_coll()
+                                                print("fasdasdfsadfsdfsadfsadfsdfdsafsadfsafsadfasd")
 						base_class.insert(temp_entity,patches_coll,{
 							"uid": pid,
 							"diff_dict": dumps(patch.patch_dict),
@@ -945,6 +948,7 @@ class ivs:
 		self.load_params()
 		print "Deleting"
                     
+                print(self.dbname)
                 base_class.delete(commits_coll,{"db_name":self.dbname}) 
                 base_class.delete(params_coll,{"db_name":self.dbname}) 
                 base_class.delete(branches_coll,{"db_name":self.dbname}) 
