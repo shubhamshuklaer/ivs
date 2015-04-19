@@ -5,6 +5,9 @@ import mongo_db_name_setting
 
 
 def apply_data(db_name,data,root_path,server=False):
+    db_name=str(db_name)
+    print("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF")
+    print({"db_name":db_name})
     mongo_db_name=mongo_db_name_setting.mongo_db_name
     db_name_coll=mongo_db_name_setting.db_name_coll
     commits_coll=mongo_db_name_setting.commits_coll
@@ -78,6 +81,8 @@ def apply_data(db_name,data,root_path,server=False):
             repo.cur_branch="master"
 
         if param_entry!=None:
+            print("hhhhhhhhhhhhhhhhhhhhhhhhhhhhh")
+            print({"db_name":db_name,"path":root_path})
             base_class.update(params_coll,{"db_name":db_name,"path":root_path},
                     {
                         "$set":{

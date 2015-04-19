@@ -120,6 +120,8 @@ def define_classes(server=False):
 
             @staticmethod
             def find(_class,search_dict):
+                print("fdsdsafsafasdfsadfasdfsad")
+                print(search_dict)
                 res=_class.all()
                 print(_class)
                 for key in search_dict:
