@@ -1,0 +1,55 @@
+{{extend 'layout.html'}}
+<html>
+	<head>
+		<title> This is the title</title>
+	</head>
+	<body>
+	<h1 align="center"> Welcome to IVS ( IITG Versioning System ) </h1>
+	
+		<a href="/ivs">Login</a>
+	
+	<a href="/ivs/default/repo">Repositories</a>
+	<a href="/ivs/default/files">Files</a>
+	<a href="/ivs/default/branches">Branches</a>
+	<a href="/ivs/default/commits">Commits</a>
+	<a href="/ivs/default/patches">Patches</a>
+	<a href="/ivs/default/logout">Logout</a>
+
+	
+
+<p align="right"> New to IVS . <a href="/ivs/default/register">Register here</a> </p>
+
+{{ if wrong==True : }} <p align="center">Username or password not found</p> {{ pass }}
+
+
+<form method="post" action="/ivs/default/auth">
+<input type='hidden' name='csrfmiddlewaretoken' value='nbFXKWpVNyddkoB8ecH1Jpk5Z9MKXuqn' />
+<table align="center">
+<tr>
+    <td>Username:</td>
+    <td><input type="text" name="username">  </td>
+</tr>
+<tr>
+    <td>Password</td>
+    <td><input type="text" name="password"></td>
+</tr>
+</tr>
+	<td>
+		<input type="submit" value="Submit" />
+	</td>
+</tr>
+</table>
+
+<input type="hidden" name="next" value="../files" /> 
+<!--<input type="hidden" name="next" value="" /> --!>
+</form>
+
+
+
+		<div style="position: relative; text-align: center">
+     			 <p style="position: fixed; bottom: 0; width:100%;"> Created by: Kunal Khandelwal , Shubham Shukla, Vibhanshu</p>
+  		</div>
+
+
+	</body>
+</html>

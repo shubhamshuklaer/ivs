@@ -1,0 +1,45 @@
+{{extend 'layout.html'}}
+
+
+
+ <h1 align="center"> Welcome to IVS ( IITG Versioning System ) </h1>
+
+                <a href="/ivs">Login</a>
+
+        <a href="/ivs/default/repo">Repositories</a>
+        <a href="/ivs/default/files">Files</a>
+        <a href="/ivs/default/branches">Branches</a>
+        <a href="/ivs/default/commits">Commits</a>
+        <a href="/ivs/default/patches">Patches</a>
+        <a href="/ivs/default/logout">Logout</a>
+
+
+
+
+<style>
+table th, td {
+	border: 1px solid black;
+	border-collapse: collapse;
+}
+th, td {
+	padding: 5px;
+}
+</style>
+
+
+<h1 align="center">Branches</h1>
+<table style="width:50%" align="center" >
+        <tr>
+                <th> Name </th>
+                <th> Parent </th>
+        </tr>
+{{ for x in branches:}}
+        <tr>
+        <td> {{=x.name}} </td>
+        <td> {{=x.parent }} </td>
+        </tr>
+{{ pass }}
+</table>
+
+
+

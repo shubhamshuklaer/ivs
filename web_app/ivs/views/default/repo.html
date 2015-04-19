@@ -1,0 +1,40 @@
+{{extend 'layout.html'}}
+
+
+
+ <h1 align="center"> Welcome to IVS ( IITG Versioning System ) </h1>
+
+                <a href="/ivs">Login</a>
+
+        <a href="/ivs/default/repo">Repositories</a>
+        <a href="/ivs/default/files">Files</a>
+        <a href="/ivs/default/branches">Branches</a>
+        <a href="/ivs/default/commits">Commits</a>
+        <a href="/ivs/default/patches">Patches</a>
+        <a href="/ivs/default/logout">Logout</a>
+
+
+
+<style>
+table th, td {
+        border: 1px solid black;
+        border-collapse: collapse;
+}
+th, td {
+        padding: 5px;
+}
+</style>
+
+
+<h1 align="center">Repositories</h1>
+<table style="width:50%" align="center">
+        <tr>
+                <th>Name</th>
+        </tr>
+{{ for x in repos: }}
+        <tr>
+        <td><a href="/ivs/default/files?db={{=x}}">{{=x}}</a> </td>
+        </tr>
+{{ pass }}
+</table>
+

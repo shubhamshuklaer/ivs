@@ -1,0 +1,58 @@
+{{extend 'layout.html'}}
+
+
+
+ <h1 align="center"> Welcome to IVS ( IITG Versioning System ) </h1>
+
+                <a href="/ivs">Login</a>
+
+        <a href="/ivs/default/repo">Repositories</a>
+        <a href="/ivs/default/files">Files</a>
+        <a href="/ivs/default/branches">Branches</a>
+        <a href="/ivs/default/commits">Commits</a>
+        <a href="/ivs/default/patches">Patches</a>
+        <a href="/ivs/default/logout">Logout</a>
+
+
+
+
+<style>
+table th, td {
+	border: 1px solid black;
+	border-collapse: collapse;
+}
+th, td {
+	padding: 5px;
+}
+</style>
+
+
+<h1 align="center">Commits</h1>
+<table style="width:100%">
+        <tr>
+                <th>Id </th>
+                <th>Parent Id </th>
+                <th>Branch </th>
+                <th>Message </th>
+                <th>Time Stamp </th>
+                <th>Added </th>
+                <th>Deleted </th>
+                <th>Child Ids </th>
+        </tr>
+{{ for x in commits:}}
+        <tr>
+                <td>    {{=x.id }} </td>
+                <td>    {{=x.parent_id }} </td>
+                <td>    {{=x.branch }} </td>
+                <td>    {{=x.msg }} </td>
+                <td>    {{=x.ts }} </td>
+                <td>    {{=x.added }} </td>
+                <td>    {{=x.deleted }} </td>
+                <td>    {{=x.child_ids }} </td>
+        </tr>
+{{ pass }}
+</table>
+
+
+
+

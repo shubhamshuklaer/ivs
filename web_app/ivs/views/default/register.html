@@ -1,0 +1,40 @@
+{{extend 'layout.html'}}
+	<head>
+		<title> This is the title</title>
+	</head>
+	<body>
+	<h1 align="center"> Welcome to IVS ( IITG Versioning System ) </h1>
+	
+		<a href="/ivs">Login</a>
+	
+	<a href="/ivs/default/repo">Repositories</a>
+	<a href="/ivs/default/files">Files</a>
+	<a href="/ivs/default/branches">Branches</a>
+	<a href="/ivs/default/commits">Commits</a>
+	<a href="/ivs/default/patches">Patches</a>
+	<a href="/ivs/default/logout">Logout</a>
+
+	
+
+<p align="right"> New to IVS . <a href="/ivs/default/register">Register here</a> </p>
+
+
+
+<form method="post" action="/ivs/default/register">
+<table>
+<tr>
+    <td>Username:</td>
+    <td><input type="text" name="username">  </td>
+</tr>
+<tr>
+    <td>Password</td>
+    <td><input type="text" name="password"></td>
+</tr>
+</table>
+
+<input type="submit" value="Submit" />
+<input type="hidden" name="next" value="../files" />
+<!--<input type="hidden" name="next" value="{{ next }}" /> --!>
+</form>
+
+

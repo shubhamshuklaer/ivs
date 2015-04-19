@@ -1,0 +1,100 @@
+# -*- coding: utf-8 -*-
+# this file is released under public domain and you can use without limitations
+import pymongo as pm
+
+#########################################################################
+## This is a sample controller
+## - index is the default action of any application
+## - user is required for authentication and authorization
+## - download is for downloading files uploaded in the db (does streaming)
+#########################################################################
+
+def index():
+    """
+    example action using the internationalization operator T and flash
+    rendered by views/default/index.html or views/generic.html
+
+    if you need a simple wiki simply replace the two lines below with:
+    return auth.wiki()
+    """
+    response.flash = T("Hello World")
+    return dict(message=T('Welcome to web2py!'))
+
+def auth():
+	session['db']=''    # the name of the database
+	#redirect(URL('index'))
+	#return str(request.vars['username'])
+	conn=pm.MongoClient()
+        db_users=conn["users"]
+        if db_users.users.find( { 'user_name': request.vars['username'] } ).count() <1 :  # no user
+		redirect(URL('index'))
+                #return render( request , 'registration/login.html', { 'auth_failure':True } )
+        else:    # if such a user exist
+                a = db_users.users.find_one( {'user_name':request.vars['username'] } )
+                if a['passwd']==request.vars['password']:  # grant access
+                        settings.user_name = request.vars['username']   # the currently logged in username
+                        session['prefix']=''
+                        session['username']=request.vars['username']
+			redirect(URL('repo'))
+		redirect(URL('index'))
+
+def repo():
+	pass
+
+
+def files():
+	pass
+
+def branches():
+	pass
+
+
+def commits():
+	pass
+
+
+def patches():
+	pass
+	
+
+def logout():
+	pass
+
+
+def user():
+    """
+    exposes:
+    http://..../[app]/default/user/login
+    http://..../[app]/default/user/logout
+    http://..../[app]/default/user/register
+    http://..../[app]/default/user/profile
+    http://..../[app]/default/user/retrieve_password
+    http://..../[app]/default/user/change_password
+    http://..../[app]/default/user/manage_users (requires membership in
+    use @auth.requires_login()
+        @auth.requires_membership('group name')
+        @auth.requires_permission('read','table name',record_id)
+    to decorate functions that need access control
+    """
+    return dict(form=auth())
+
+
+@cache.action()
+def download():
+    """
+    allows downloading of uploaded files
+    http://..../[app]/default/download/[filename]
+    """
+    return response.download(request, db)
+
+
+def call():
+    """
+    exposes services. for example:
+    http://..../[app]/default/call/jsonrpc
+    decorate with @services.jsonrpc the functions to expose
+    supports xml, json, xmlrpc, jsonrpc, amfrpc, rss, csv
+    """
+    return service()
+
+
